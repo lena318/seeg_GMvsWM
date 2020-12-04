@@ -1,4 +1,4 @@
-name: brain_atlas
+name: gm_wm
 channels:
  - defaults
 dependencies:
