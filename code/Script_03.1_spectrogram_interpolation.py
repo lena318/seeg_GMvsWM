@@ -24,42 +24,69 @@ postictal_file = "./data_processed/eeg/montage/referential/filtered/sub-RID0278/
 
 ~~~~~~~
 """
-
+path = "/media/arevell/sharedSSD1/linux/papers/paper005" #Parent directory of project
 import pickle
 import numpy as np
 import os
 import sys
-sys.path.append("..")
-import os
+from os.path import join as ospj
+sys.path.append(ospj(path, "seeg_GMvsWM", "code", "tools"))
 import matplotlib.pyplot as plt
 import pandas as pd
 from scipy.interpolate import interp1d
 np.seterr(divide = 'ignore')
 
-paper_path = "../../.."
-#assumes current working directory is paper005/paper005/pipelines/scripts/
-filtered_eeg_file_path = os.path.join(paper_path, "data_processed/eeg/montage/referential/filtered")
-spectrogram_file_path = os.path.join(paper_path, "data_processed/spectrogram/montage/referential/filtered/original")
-spectrogram_file_path_interpolated = os.path.join(paper_path, "data_processed/spectrogram/montage/referential/filtered/interpolated")
-RID = [f for f in sorted(os.listdir(filtered_eeg_file_path))]
 
-for sub_ID in RID:
-    sub_ID_eeg_file_path = os.path.join(filtered_eeg_file_path, sub_ID)
-    eeg_files = [f for f in sorted(os.listdir(sub_ID_eeg_file_path))]
-    inputfile_path = os.path.join(filtered_eeg_file_path, sub_ID)
-    outputfile_path = os.path.join(spectrogram_file_path, sub_ID)
-    outputfile_path_interpolated = os.path.join(spectrogram_file_path_interpolated, sub_ID)
-    if not (os.path.isdir(outputfile_path)): os.mkdir(outputfile_path)
-    if not (os.path.isdir(outputfile_path_interpolated)): os.mkdir(outputfile_path_interpolated)
-    for eeg_file in eeg_files:
-        outputfile_name = eeg_file.replace('EEG_filtered.pickle', 'spectrogram_filtered.pickle')
-        outputfile_name_interpolation = eeg_file.replace('EEG_filtered.pickle', 'spectrogram_filtered_interpolated.pickle')
-        inputfile = os.path.join(inputfile_path, eeg_file)
-        outputfile = os.path.join(outputfile_path,outputfile_name)
-        outputfile_interpolation = os.path.join(outputfile_path_interpolated, outputfile_name_interpolation)
-        print("reading file {0}".format(inputfile))
-        with open(inputfile, 'rb') as f: data, fs = pickle.load(f)
-        data_array = np.array(data)
+
+#%% Input/Output Paths and File names
+ifname_EEG_times = ospj( path, "data/data_raw/iEEG_times/EEG_times.xlsx")
+ifpath_filtered_eeg = ospj(path, "data/data_processed/eeg/montage/referential/filtered")
+ofpath_spectrogram = ospj(path, "data/data_processed/spectrogram/montage/referential/filtered/original")
+ofpath_spectrogram_interpolated = ospj(path, "data/data_processed/spectrogram/montage/referential/filtered/interpolated")
+
+if not (os.path.isdir(ofpath_spectrogram)): os.makedirs(ofpath_spectrogram, exist_ok=True)
+if not (os.path.isdir(ofpath_spectrogram_interpolated)): os.makedirs(ofpath_spectrogram_interpolated, exist_ok=True)
+
+
+#%% Load Study Meta Data
+data = pd.read_excel(ifname_EEG_times)    
+
+#%% Processing Meta Data: extracting sub-IDs
+
+sub_IDs_unique = np.unique(data.RID)
+
+
+
+#%%
+
+for i in range(len(data)):
+    #parsing data DataFrame to get iEEG information
+    sub_ID = data.iloc[i].RID
+    iEEG_filename = data.iloc[i].file
+    ignore_electrodes = data.iloc[i].ignore_electrodes.split(",")
+    start_time_usec = int(data.iloc[i].connectivity_start_time_seconds*1e6)
+    stop_time_usec = int(data.iloc[i].connectivity_end_time_seconds*1e6)
+    descriptor = data.iloc[i].descriptor
+    #input filename EEG
+    ifpath_sub_ID_eeg = os.path.join(ifpath_filtered_eeg, "sub-{0}".format(sub_ID))
+    
+    
+
+
+    ofpath_spectrogram_sub_ID = os.path.join(ofpath_spectrogram, "sub-{0}".format(sub_ID))
+    ofpath_interpolated_sub_ID = os.path.join(ofpath_spectrogram_interpolated, "sub-{0}".format(sub_ID))
+    if not (os.path.isdir(ofpath_spectrogram_sub_ID)): os.mkdir(ofpath_spectrogram_sub_ID)
+    if not (os.path.isdir(ofpath_interpolated_sub_ID)): os.mkdir(ofpath_interpolated_sub_ID)
+
+    ifname_EEG_filtered = ospj(ifpath_sub_ID_eeg, "sub-{0}_{1}_{2}_{3}_EEG_filtered.pickle.pickle".format(sub_ID, iEEG_filename, start_time_usec, stop_time_usec))
+    ofname_spectrogram = ospj(ofpath_spectrogram_sub_ID, "sub-{0}_{1}_{2}_{3}_spectrogram_filtered.pickle".format(sub_ID, iEEG_filename, start_time_usec, stop_time_usec))
+    ofname_interpolated = ospj(ofpath_interpolated_sub_ID, "sub-{0}_{1}_{2}_{3}_spectrogram_filtered_interpolated.pickle".format(sub_ID, iEEG_filename, start_time_usec, stop_time_usec))
+    
+    
+    if not (os.path.exists(ofname_interpolated)):
+        print("reading file {0}".format(ifname_EEG_filtered))
+        with open(ifname_EEG_filtered, 'rb') as f: eeg, fs = pickle.load(f)
+        data_array = np.array(eeg)
         NFFT = int(256)
         noverlap = 128
         spec_shape = plt.specgram(x=data_array[:,0], Fs=fs, NFFT=NFFT, scale_by_freq=True, noverlap=noverlap)[0].shape
@@ -75,7 +102,7 @@ for sub_ID in RID:
             xnew = np.linspace(bins[0], bins[-1], num=interpolation_length, endpoint=True)
             Pxx_interplation = interp(xnew)
             spectrogram_interpolation[:, :, i] = Pxx_interplation
-        print("saving file {0}".format(outputfile_name))
-        with open(outputfile, 'wb') as f: pickle.dump([spectrogram, freqs, bins, data.columns[:]], f)
-        print("saving file {0}\n\n".format(outputfile_name_interpolation))
-        with open(outputfile_interpolation, 'wb') as f: pickle.dump([spectrogram_interpolation, freqs, xnew, data.columns[:]], f)
+        print("saving file {0}".format(ofname_spectrogram))
+        with open(ofname_spectrogram, 'wb') as f: pickle.dump([spectrogram, freqs, bins, eeg.columns[:]], f)
+        print("saving file {0}\n\n".format(ofname_interpolated))
+        with open(ofname_interpolated, 'wb') as f: pickle.dump([spectrogram_interpolation, freqs, xnew, eeg.columns[:]], f)

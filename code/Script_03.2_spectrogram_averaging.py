@@ -19,102 +19,154 @@ Example:
 
 ~~~~~~~
 """
-
+path = "/media/arevell/sharedSSD1/linux/papers/paper005" #Parent directory of project
 import pickle
 import numpy as np
 import os
 import sys
-sys.path.append("..")
-import os
+from os.path import join as ospj
+sys.path.append(ospj(path, "seeg_GMvsWM", "code", "tools"))
 import matplotlib.pyplot as plt
 import pandas as pd
+from scipy.interpolate import interp1d
+np.seterr(divide = 'ignore')
 
-paper_path = "../../.."
-#assumes current working directory is paper005/paper005/pipelines/scripts/
-spectrogram_file_path_interpolated = os.path.join(paper_path, "data_processed/spectrogram/montage/referential/filtered/interpolated")
-spectrogram_file_path_interpolated_avg = os.path.join(paper_path, "data_processed/spectrogram/montage/referential/filtered/interpolated_avg")
-RID = [f for f in sorted(os.listdir(spectrogram_file_path_interpolated))]
-electrode_localization_file_path = os.path.join(paper_path, "data_raw/electrode_localization")
-total_num_electrodes_GM = np.zeros(shape=[1, len(RID)])
-total_num_electrodes_WM = np.zeros(shape=[1, len(RID)])
-cnt = 0
-distance_considered_WM = 3
-for sub_ID in RID:
-    sub_ID_spectrogram_file_path = os.path.join(spectrogram_file_path_interpolated, sub_ID)
-    spectrogram_files = [f for f in sorted(os.listdir(sub_ID_spectrogram_file_path))]
-    inputfile_path = os.path.join(spectrogram_file_path_interpolated, sub_ID)
-    sub_ID_electrode_localization_file_path = os.path.join(electrode_localization_file_path, sub_ID)
-    electrode_localization_file_name = [f for f in sorted(os.listdir(sub_ID_electrode_localization_file_path))]
-    electrode_localization = pd.read_csv(os.path.join(electrode_localization_file_path, sub_ID, electrode_localization_file_name[0]))
-    outputfile_path = os.path.join(spectrogram_file_path_interpolated_avg, sub_ID)
-    if not (os.path.isdir(outputfile_path)): os.mkdir(outputfile_path)
-    for spectrogram_file in spectrogram_files:
-        outputfile_name = spectrogram_file.replace('.pickle', '_avg.pickle')
-        inputfile = os.path.join(inputfile_path, spectrogram_file)
-        outputfile = os.path.join(outputfile_path,outputfile_name)
-        print("reading file {0}".format(inputfile))
-        with open(inputfile, 'rb') as f: spectrogram_interpolation, freqs, xnew, columns = pickle.load(f)
-        num_GM = len(np.where(electrode_localization.iloc[:, 4] <= distance_considered_WM)[0])
-        num_WM = len(np.where(electrode_localization.iloc[:, 4] > distance_considered_WM)[0])
-        spectrogram_GM = np.zeros(
-            shape=(spectrogram_interpolation.shape[0], spectrogram_interpolation.shape[1], num_GM))
-        spectrogram_WM = np.zeros(
-            shape=(spectrogram_interpolation.shape[0], spectrogram_interpolation.shape[1], num_WM))
-        count = 0;
-        count_GM = 0;
+
+
+#%% Input/Output Paths and File names
+ifname_EEG_times = ospj( path, "data/data_raw/iEEG_times/EEG_times.xlsx")
+ifpath_electrode_localization = ospj( path, "data/data_processed/electrode_localization")
+ifpath_spectrogram = ospj(path, "data/data_processed/spectrogram/montage/referential/filtered/original")
+ifpath_spectrogram_interpolated = ospj(path, "data/data_processed/spectrogram/montage/referential/filtered/interpolated")
+
+ofpath_spectrogram_interpolated_avg = ospj(path, "data/data_processed/spectrogram/montage/referential/filtered/interpolated_avg")
+ofpath_spectrogram_interpolated_avg_all = ospj(path, "data/data_processed/spectrogram/montage/referential/filtered/interpolated_all_patients_combined")
+
+
+if not (os.path.isdir(ofpath_spectrogram_interpolated_avg)): os.makedirs(ofpath_spectrogram_interpolated_avg, exist_ok=True)
+if not (os.path.isdir(ofpath_spectrogram_interpolated_avg_all)): os.makedirs(ofpath_spectrogram_interpolated_avg_all, exist_ok=True)
+
+
+#%% Load Study Meta Data
+data = pd.read_excel(ifname_EEG_times)    
+
+#%% Processing Meta Data: extracting sub-IDs
+
+sub_IDs_unique = np.unique(data.RID)
+#%%
+total_num_electrodes_GM = np.zeros(shape=[1, len(sub_IDs_unique)])
+total_num_electrodes_WM = np.zeros(shape=[1, len(sub_IDs_unique)])
+distance_considered_GM = 0
+distance_considered_WM = 2
+for i in range(len(data)):
+    #parsing data DataFrame to get iEEG information
+    sub_ID = data.iloc[i].RID
+    print(sub_ID)
+    iEEG_filename = data.iloc[i].file
+    ignore_electrodes = data.iloc[i].ignore_electrodes.split(",")
+    start_time_usec = int(data.iloc[i].connectivity_start_time_seconds*1e6)
+    stop_time_usec = int(data.iloc[i].connectivity_end_time_seconds*1e6)
+    descriptor = data.iloc[i].descriptor
+    
+    #Inputs and OUtputs
+    #input filename EEG
+    ifpath_interpolated_sub_ID = os.path.join(ifpath_spectrogram_interpolated, "sub-{0}".format(sub_ID))
+    ifpath_electrode_localization_sub_ID = os.path.join(ifpath_electrode_localization, "sub-{0}".format(sub_ID))
+    
+    ifname_interpolated = ospj(ifpath_interpolated_sub_ID, "sub-{0}_{1}_{2}_{3}_spectrogram_filtered_interpolated.pickle".format(sub_ID, iEEG_filename, start_time_usec, stop_time_usec))
+    ifname_electrode_localization = ospj(ifpath_electrode_localization_sub_ID, "sub-{0}_electrode_localization.csv".format(sub_ID))
+    
+    ofpath_spectrogram_interpolated_avg_sub_ID = ospj(ofpath_spectrogram_interpolated_avg, "sub-{0}".format(sub_ID))
+    if not (os.path.isdir(ofpath_spectrogram_interpolated_avg_sub_ID)): os.mkdir(ofpath_spectrogram_interpolated_avg_sub_ID)
+    
+    ofname_spectrodram_interpolated_avg_sub_ID =  ospj(ofpath_spectrogram_interpolated_avg_sub_ID, "sub-{0}_{1}_{2}_{3}_spectrogram_filtered_interpolated_avg.pickle".format(sub_ID, iEEG_filename, start_time_usec, stop_time_usec))
+
+    #Calculating Averages of binary classification
+    
+    if (os.path.exists(ifname_electrode_localization)):
+        electrode_localization = pd.read_csv(ifname_electrode_localization)
+        print("reading file {0}".format(ifname_interpolated))
+        with open(ifname_interpolated, 'rb') as f: spectrogram_interpolation, freqs, xnew, columns = pickle.load(f)
+        
+        np.logical_and( electrode_localization["distances_label_2"] > distance_considered_WM, electrode_localization["region_number"] >= 2 )
+        num_GM = len(np.where(    np.logical_and( electrode_localization["distances_label_2"] <= distance_considered_GM, electrode_localization["region_number"] >= 2 )  )[0]   )  
+        num_WM = len(np.where(    np.logical_and( electrode_localization["distances_label_2"] >  distance_considered_WM, electrode_localization["region_number"] >= 2 )  )[0]  )
+        spectrogram_GM = np.zeros( shape=(spectrogram_interpolation.shape[0], spectrogram_interpolation.shape[1], num_GM))
+        spectrogram_WM = np.zeros( shape=(spectrogram_interpolation.shape[0], spectrogram_interpolation.shape[1], num_WM))
+        
+
+        count_GM = 0
         count_WM = 0
-        for e in columns:
-            if any(np.array(electrode_localization.iloc[:, 0]) == e):#if any analyzed signals are not in the electrode localization file, dont' compute.
-                loc = np.where(np.array(electrode_localization.iloc[:, 0]) == e)[0][0]
-                dist_GM = electrode_localization.iloc[loc, 4]
-                if dist_GM <= distance_considered_WM and dist_GM >=0:
-                    spectrogram_GM[:, :, count_GM] = spectrogram_interpolation[:, :, count]
+        for e in range(len(columns)):
+            electrode_name = columns[e]
+            if (len(electrode_name) == 3): electrode_name = "{0}{1}{2}".format(electrode_name[0:2], 0, electrode_name[2])
+            if any(np.array(electrode_localization["electrode_name"]) == electrode_name):#if any analyzed signals are not in the electrode localization file, dont' compute.
+                loc = np.where(np.array(electrode_localization["electrode_name"]) == electrode_name)[0][0]
+                distance = electrode_localization["distances_label_2"][loc]
+                region_number =  electrode_localization["region_number"][loc] 
+                if all([distance <= distance_considered_GM, region_number >= 2 ]):
+                    spectrogram_GM[:, :, count_GM] = spectrogram_interpolation[:, :, e]
                     count_GM = count_GM + 1
-                if dist_GM > distance_considered_WM:
-                    spectrogram_WM[:, :, count_WM] = spectrogram_interpolation[:, :, count]
+                if all([distance > distance_considered_WM, region_number >= 2]):
+                    spectrogram_WM[:, :, count_WM] = spectrogram_interpolation[:, :, e]
                     count_WM = count_WM + 1
-            count = count + 1
-        #some electrodes are have locations, but are not recorded on iEEG.org, so need to delete the part of the arrays
+
+        #some electrodes have locations, but are not recorded on iEEG.org, so need to delete the part of the arrays
         spectrogram_GM = np.delete(spectrogram_GM, range(count_GM, num_GM), axis=2)
         spectrogram_WM = np.delete(spectrogram_WM, range(count_WM, num_WM), axis=2)
-        spectrogram_GM_mean = np.mean(spectrogram_GM, axis=2)
-        spectrogram_WM_mean = np.mean(spectrogram_WM, axis=2)
-        print("saving file {0}\n\n".format(outputfile))
-        with open(outputfile, 'wb') as f: pickle.dump([spectrogram_GM_mean, spectrogram_WM_mean, freqs, xnew, columns], f)
-    total_num_electrodes_GM[0,cnt] = spectrogram_GM.shape[2]
-    total_num_electrodes_WM[0,cnt] =  spectrogram_WM.shape[2]
-    cnt = cnt + 1
+        spectrogram_GM_mean = np.nanmean(spectrogram_GM, axis=2)
+        spectrogram_WM_mean = np.nanmean(spectrogram_WM, axis=2)
+        print("saving file {0}\n\n".format(ofname_spectrodram_interpolated_avg_sub_ID))
+        with open(ofname_spectrodram_interpolated_avg_sub_ID, 'wb') as f: pickle.dump([spectrogram_GM_mean, spectrogram_WM_mean, freqs, xnew, columns], f)
+
+
+
 
 np.sum(total_num_electrodes_GM)
 np.sum(total_num_electrodes_WM)
+
+#%%
 #averaging by patient across each peri-ictal time
-spectrogram_file_path_interpolated_avg_all = os.path.join(paper_path, "data_processed/spectrogram/montage/referential/filtered/interpolated_all_patients_combined")
+ofname_spectrogram_interpolated_avg_all = ospj(ofpath_spectrogram_interpolated_avg_all,"ALL_patient_spectrograms_averaged.pickle")
+
 ALL_data_GM = np.zeros(shape=(129, 200, 4 ))
 ALL_data_WM = np.zeros(shape=(129, 200, 4 ))
-for i in range(0,4):
-    spectrogram_ALL_GM = np.zeros(shape=(129, 200, len(RID) ))
-    spectrogram_ALL_WM = np.zeros(shape=(129, 200, len(RID)))
-    count_sub = 0
-    for sub_ID in RID:
-        inputfile_path = os.path.join(spectrogram_file_path_interpolated_avg, sub_ID)
-        spectrogram_file = [f for f in sorted(os.listdir(inputfile_path))][i]#assumes 0 = interictal, 1 = preictal, 2= ictal, 3 = postictal
-        inputfile = os.path.join(inputfile_path, spectrogram_file)
-        outputfile_name = "ALL_patient_spectrograms_averaged.pickle"
-        outputfile = os.path.join(spectrogram_file_path_interpolated_avg_all, outputfile_name)
-        if not (os.path.isdir(spectrogram_file_path_interpolated_avg_all)): os.mkdir(spectrogram_file_path_interpolated_avg_all)
-        print("reading file {0}".format(inputfile))
-        with open(inputfile, 'rb') as f: spectrogram_GM_mean, spectrogram_WM_mean, freqs, xnew, columns = pickle.load(f)
-        spectrogram_ALL_GM[:, :, count_sub] = np.log10(spectrogram_GM_mean)
-        spectrogram_ALL_WM[:, :, count_sub] = np.log10(spectrogram_WM_mean)
-        count_sub = count_sub + 1
-    print("{0}\n\n".format(i))
-    spectrogram_ALL_GM_mean = np.mean(spectrogram_ALL_GM, axis=2)
-    spectrogram_ALL_WM_mean = np.mean(spectrogram_ALL_WM, axis=2)
-    ALL_data_GM[:,:,i] = spectrogram_ALL_GM_mean
-    ALL_data_WM[:,:,i] = spectrogram_ALL_WM_mean
 
-print("saving file {0}\n\n".format(outputfile))
-with open(outputfile, 'wb') as f: pickle.dump([ALL_data_GM, ALL_data_WM, freqs, xnew], f)
+descriptors = ["interictal","preictal","ictal","postictal"]
+for per in range(len(descriptors)):
+    print("{0}\n\n".format(per))
+    count_sub = 0
+    spectrogram_ALL_GM = np.zeros(shape=(129, 200, len(sub_IDs_unique) ))
+    spectrogram_ALL_WM = np.zeros(shape=(129, 200, len(sub_IDs_unique)))
+    for i in range(len(data)):
+        #parsing data DataFrame to get iEEG information
+        sub_ID = data.iloc[i].RID
+        iEEG_filename = data.iloc[i].file
+        ignore_electrodes = data.iloc[i].ignore_electrodes.split(",")
+        start_time_usec = int(data.iloc[i].connectivity_start_time_seconds*1e6)
+        stop_time_usec = int(data.iloc[i].connectivity_end_time_seconds*1e6)
+        descriptor = data.iloc[i].descriptor
+        
+        if (descriptor == descriptors[per]):
+    
+            print("{0}: {1}".format(sub_ID, descriptor)   )
+            ofpath_spectrogram_interpolated_avg_sub_ID = ospj(ofpath_spectrogram_interpolated_avg, "sub-{0}".format(sub_ID))
+            ofname_spectrodram_interpolated_avg_sub_ID =  ospj(ofpath_spectrogram_interpolated_avg_sub_ID, "sub-{0}_{1}_{2}_{3}_spectrogram_filtered_interpolated_avg.pickle".format(sub_ID, iEEG_filename, start_time_usec, stop_time_usec))
+
+            with open(ofname_spectrodram_interpolated_avg_sub_ID, 'rb') as f: spectrogram_GM_mean, spectrogram_WM_mean, freqs, xnew, columns = pickle.load(f)
+            spectrogram_ALL_GM[:, :, count_sub] = np.log10(spectrogram_GM_mean)
+            spectrogram_ALL_WM[:, :, count_sub] = np.log10(spectrogram_WM_mean)
+            count_sub = count_sub + 1
+            
+
+           
+    spectrogram_ALL_GM_mean = np.nanmean(spectrogram_ALL_GM, axis=2)
+    spectrogram_ALL_WM_mean = np.nanmean(spectrogram_ALL_WM, axis=2)
+    ALL_data_GM[:,:,per] = spectrogram_ALL_GM_mean
+    ALL_data_WM[:,:,per] = spectrogram_ALL_WM_mean
+
+print("saving file {0}\n\n".format(ofname_spectrogram_interpolated_avg_all))
+with open(ofname_spectrogram_interpolated_avg_all, 'wb') as f: pickle.dump([ALL_data_GM, ALL_data_WM, freqs, xnew], f)
 
 np.sum(total_num_electrodes_GM)
 np.sum(total_num_electrodes_WM)

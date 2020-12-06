@@ -35,29 +35,24 @@ from matplotlib.colors import ListedColormap, LinearSegmentedColormap
 import pandas as pd
 from matplotlib.patches import Ellipse
 
-paper_path = "."
-#assumes current working directory is paper005/paper005/pipelines/scripts/
+path = "/media/arevell/sharedSSD1/linux/papers/paper005" #Parent directory of project
+
 
 #Spectrogram
-input_path = os.path.join(paper_path, "data_processed/spectrogram/montage/referential/filtered/interpolated_all_patients_combined")
-inputfile = os.path.join(input_path, [f for f in sorted(os.listdir(input_path))][0])
-with open(inputfile, 'rb') as f: ALL_data_GM, ALL_data_WM, freqs, xnew = pickle.load(f)
+ifname_spectrogram = os.path.join(path, "data/data_processed/spectrogram/montage/referential/filtered/interpolated_all_patients_combined/ALL_patient_spectrograms_averaged.pickle")
+with open(ifname_spectrogram, 'rb') as f: ALL_data_GM, ALL_data_WM, freqs, xnew = pickle.load(f)
 
 #PSD VS Distance
-input_path = os.path.join(paper_path, "data_processed/PSDvsDistance/montage/referential/filtered/averaged")
-inputfile_name = "PSDvsDistance_All_patients.pickle"
-inputfile = os.path.join(input_path, inputfile_name)
-with open(inputfile, 'rb') as f: interictal, preictal, ictal ,postictal = pickle.load(f)
+ifname_PSDvsDistance = os.path.join(path, "data/data_processed/PSDvsDistance/montage/referential/filtered/averaged/PSDvsDistance_All_patients.pickle")
+with open(ifname_PSDvsDistance, 'rb') as f: PSDvsDistance_avg = pickle.load(f)
 
 
 #SNR
-input_path = os.path.join(paper_path, "data_processed/SNR/montage/referential/filtered/average")
-inputfile_name = "SNR_all_patients_mean.pickle"
-inputfile = os.path.join(input_path, inputfile_name)
-with open(inputfile, 'rb') as f: SNR_all_patients_mean, SNR_all_patients, bins_new, RID, breaks = pickle.load(f)
+ifname_SNR = os.path.join(path, "data/data_processed/SNR/montage/referential/filtered/averaged/SNR_all_patients_mean.pickle")
+with open(ifname_SNR, 'rb') as f: SNR_all_patients_mean, SNR_all_patients, bins_new, RID, breaks = pickle.load(f)
 
-output_path = os.path.join(paper_path, "paper005/figures/figure2")
-outputfile = os.path.join(output_path, "figure2_low_resolution.png")
+ofpath_figure = os.path.join(path, "seeg_GMvsWM/figures/eeg_spectral_properties")
+ofname_figure = os.path.join(ofpath_figure, "eeg_spectral_properties.png")
 
 
 
@@ -70,7 +65,7 @@ outputfile = os.path.join(output_path, "figure2_low_resolution.png")
 
 
 
-
+#%%
 
 
 #general plotting parameters
@@ -103,9 +98,9 @@ for a in range(len(axes)):
 cbar_ax1 = fig1.add_axes([.85, .72, .02, .16])
 cbar_ax2 = fig1.add_axes([.85, .52, .02, .16])
 ylim = 31
-for i in range(0,2):
+for i in range(0,2): #i= 0 GM, i = 1 WM
     k = 0
-    for j in range(0, 5):
+    for j in range(0, 5): #interictal preictal ictal postictal
         if i == 0:
             plot = ALL_data_GM[:, :, k]
         if i == 1:
@@ -124,6 +119,7 @@ for i in range(0,2):
                             cbar=k <1 , cbar_ax=None if k else cbar_ax2, cbar_kws={'label': '$\mathregular{log_{10}}({V^2}/{Hz})$'})
                 print(k < 1)
             old_ticks = axes[i][j].get_xticks()
+            old_ticks_y = axes[i][j].get_yticks()
             new_ticks = np.linspace(np.min(old_ticks), np.max(old_ticks), 5)
             new_ticks = new_ticks[range(1,4)]
             axes[i][j].set_xticks(new_ticks)
@@ -131,7 +127,7 @@ for i in range(0,2):
             if j == 0:
                 axes[i][j].set_xticks([new_ticks[1]])
                 axes[i][j].set_xticklabels(["~6hrs before"], rotation=0)
-                axes[i][j].set_yticklabels([0, 10,20,30,40,50], rotation=0)
+                axes[i][j].set_yticklabels([0, 10,20], rotation=0)
             if j > 1:
                 axes[i][j].set_yticks([])
                 if j <4:
@@ -142,6 +138,7 @@ for i in range(0,2):
         cbar_ax1.yaxis.set_label_position('left')
         cbar_ax2.yaxis.set_ticks_position('left')
         cbar_ax2.yaxis.set_label_position('left')
+
 fig1.text(0.02, 0.7, 'Frequency (Hz)', ha='center', va='center', rotation='vertical', fontdict = {'fontsize': fontsize*0.7})
 fig1.text(0.02, 0.35, 'Frequency (Hz)', ha='center', va='center', rotation='vertical', fontdict = {'fontsize': fontsize*0.7})
 fig1.text(0.02, 0.121, 'SNR', ha='center', va='center', rotation='vertical', fontdict = {'fontsize': fontsize*0.7})
@@ -158,8 +155,8 @@ fig1.text(subplot_x, 0.8, 'Gray\nMatter', ha='center', va='center', fontdict = {
 fig1.text(subplot_x, 0.6, 'White\nMatter', ha='center', va='center',  fontdict = {'fontsize': fontsize*1.1})
 fig1.text(subplot_x, 0.35, 'Distance\nvs\nPower', ha='center', va='center',  fontdict = {'fontsize': fontsize*1.1})
 fig1.text(subplot_x, 0.121, 'SNR', ha='center', va='center', fontdict = {'fontsize': fontsize*1.1})
-fig1.text(0.5, 0.98, 'Power and SNR', ha='center', va='top', fontdict = {'fontsize': fontsize*1.1})
-fig1.text(subplot_x-0.05, 0.98, 'Patients: 5\nSeizures: 5\nGM electrodes: 434\nWM electrodes: 97', ha='left', va='top', fontdict = {'fontsize': 12})
+fig1.text(0.5, 0.98, 'Univariate Analyses: Power and SNR', ha='center', va='top', fontdict = {'fontsize': fontsize*1.1})
+#fig1.text(subplot_x-0.05, 0.98, 'Patients: 5\nSeizures: 5\nGM electrodes: 434\nWM electrodes: 97', ha='left', va='top', fontdict = {'fontsize': 12})
 
 fig1.text(0.08, 0.121, '$\mathregular{SNR}=(\\frac{P_{segment}}{P_{interictal}})$', ha='left', fontdict = {'fontsize': fontsize*0.9})
 
@@ -169,16 +166,14 @@ fig1.text(0.02, 0.195, 'C.', ha='center', va='center', fontdict = {'fontsize': f
 
 
 
-
 #PSDvsDistance
-PSDvsDistance = [interictal, preictal, ictal, postictal]
+PSDvsDistance = [PSDvsDistance_avg[:,:,0], PSDvsDistance_avg[:,:,1], PSDvsDistance_avg[:,:,2], PSDvsDistance_avg[:,:,3]]
 cbar_ax3 = fig1.add_axes([0.85, 0.25, 0.02, 0.20])
 PSDvsDist_limits = [51,800]
 i = 2
 k = 0
 for j in range(0, 4):
     plot = PSDvsDistance[k]
-    plot = np.nanmean(plot, axis=2)
     plot = np.delete(np.array(plot), range(30, np.shape(plot)[0]), axis=0)
     plot = np.delete(plot, range(800, np.shape(plot)[1]), axis=1)
     plot = np.log10(plot)
@@ -198,12 +193,11 @@ for j in range(0, 4):
     axes[i][j].invert_yaxis()
 cbar_ax3.yaxis.set_ticks_position('left')
 cbar_ax3.yaxis.set_label_position('left')
-axes[i][0].add_patch(Ellipse((90, 7.1), width=160, height=12,edgecolor='#0000cccc',facecolor='none',linewidth=5))
-axes[i][0].add_patch(Ellipse((700, 7.1), width=160, height=12,edgecolor='#0000cccc',facecolor='none',linewidth=5))
+#axes[i][0].add_patch(Ellipse((90, 7.1), width=160, height=12,edgecolor='#0000cccc',facecolor='none',linewidth=5))
+#axes[i][0].add_patch(Ellipse((700, 7.1), width=160, height=12,edgecolor='#0000cccc',facecolor='none',linewidth=5))
 
-axes[i][2].add_patch(Ellipse((90, 7.1), width=160, height=12,edgecolor='#cc0000cc',facecolor='none',linewidth=5))
-axes[i][2].add_patch(Ellipse((700, 7.1), width=160, height=12,edgecolor='#cc0000cc',facecolor='none',linewidth=5))
-
+#axes[i][2].add_patch(Ellipse((90, 7.1), width=160, height=12,edgecolor='#cc0000cc',facecolor='none',linewidth=5))
+#axes[i][2].add_patch(Ellipse((700, 7.1), width=160, height=12,edgecolor='#cc0000cc',facecolor='none',linewidth=5))
 
 
 #SNR
@@ -248,7 +242,7 @@ for j in range(0, 5):
             axes[i][j].get_legend().set_visible(False)
         if j == 4:
             handles, labels = axes[i][j].get_legend_handles_labels()
-            axes[i][j].legend(handles=handles[1:], labels=labels[1:], title="Distance (mm)",
+            axes[i][j].legend(handles=handles[0:], labels=labels[0:], title="Distance (mm)",
                               bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
         old_ticks = axes[i][j].get_xticks()
         new_ticks = np.linspace(np.min(old_ticks), np.max(old_ticks), 5)
@@ -265,5 +259,6 @@ for j in range(0, 5):
                 axes[i][j].axvline(x=np.shape(ALL_data_GM)[1], c="black", linewidth=4, linestyle='--')
         k = k + 1
 
-plt.savefig(outputfile, dpi = 100)
+
+plt.savefig(ofname_figure, dpi = 100)
 

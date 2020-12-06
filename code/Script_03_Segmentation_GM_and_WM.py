@@ -58,7 +58,7 @@ ifpath_electrode_localization = ospj( path, "data/data_raw/electrode_localizatio
 ifpath_imaging = ospj( path, "data/data_raw/imaging")
 ofpath_segmentation = ospj( path, "data/data_processed/GM_WM_segmentations")
 
-if not (os.path.isdir(ofpath_segmentation)): os.mkdir(ofpath_segmentation)
+if not (os.path.isdir(ofpath_segmentation)): os.makedirs(ofpath_segmentation, exist_ok=True)
 
 #%% Load Study Meta Data
 data = pd.read_excel(ifname_EEG_times)    

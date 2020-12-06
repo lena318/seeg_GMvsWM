@@ -57,7 +57,7 @@ ifpath_electrode_localization = ospj( path, "data/data_raw/electrode_localizatio
 ifpath_segmentations = ospj( path, "data/data_processed/GM_WM_segmentations")
 ofpath_electrode_localization = ospj( path, "data/data_processed/electrode_localization")
 
-if not (os.path.isdir(ofpath_electrode_localization)): os.mkdir(ofpath_electrode_localization)
+if not (os.path.isdir(ofpath_electrode_localization)): os.makedirs(ofpath_electrode_localization, exist_ok=True)
 #%% Load Study Meta Data
 data = pd.read_excel(ifname_EEG_times)    
 
@@ -90,16 +90,13 @@ for i in range(len(sub_IDs_unique)):
     ofpath_localization_files = ospj(ofpath_electrode_localization_sub_ID, "individual_files")
     if not (os.path.isdir(ofpath_localization_files)): os.mkdir(ofpath_localization_files)#if the path doesn't exists, then make the directory
 
-
     ofname_electrode_localization_concatenated = ospj(ofpath_electrode_localization_sub_ID, "sub-{0}_electrode_localization.csv".format(sub_ID))
 
     #localization
     electrode_localization.by_region(ifname_electrode_localization_sub_ID, ifname_seg_sub_ID, ospj(ofpath_localization_files, "sub-{0}_GM_WM_CSF.csv".format(sub_ID)))
     electrode_localization.distance_from_label(ifname_electrode_localization_sub_ID, ifname_seg_sub_ID, 2, ospj(ofpath_localization_files, "sub-{0}_WM_distance.csv".format(sub_ID)))
 
-
     #Concatenate files into one
-
     files = [f for f in sorted(os.listdir(ofpath_localization_files))]
     for f in range(len(files)):
         if f == 0:

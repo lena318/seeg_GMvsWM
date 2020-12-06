@@ -40,7 +40,7 @@ ifname_EEG_times = ospj(path,"data/data_raw/iEEG_times/EEG_times.xlsx")
 ifpath_EEG = ospj(path,"data/data_raw/EEG")
 ofpath_filtered_eeg = ospj(path,"data/data_processed/eeg/montage/referential/filtered")
 
-
+if not (os.path.isdir(ofpath_filtered_eeg)): os.makedirs(ofpath_filtered_eeg, exist_ok=True)
 
 #%% Load Study Meta Data
 data = pd.read_excel(ifname_EEG_times)    
