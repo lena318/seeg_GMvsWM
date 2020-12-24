@@ -31,7 +31,7 @@ import os
 import sys
 from os.path import join as ospj
 path = ospj("/media","arevell","sharedSSD","linux","papers","paper005") #Parent directory of project
-#path = ospj("E:\\","linux","papers","paper005") #Parent directory of project
+path = ospj("E:\\","linux","papers","paper005") #Parent directory of project
 sys.path.append(ospj(path, "seeg_GMvsWM", "code", "tools"))
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -51,7 +51,7 @@ from colormap import rgb2hex #pip install colormap;  pip install easydev
 from scipy.stats import pearsonr, spearmanr
 from mpl_toolkits.mplot3d import Axes3D
 np.seterr(divide = 'ignore')
-
+from sklearn.linear_model import LinearRegression
 from statsmodels.gam.api import GLMGam, BSplines
 import pygam #pip install pygam
 
@@ -127,6 +127,13 @@ if (calculate_distances_boolean):
 descriptors = ["interictal","preictal","ictal","postictal"]
 #%%
 #%
+DATA = [None] * len(sub_IDs_unique)
+for pt in range(len(sub_IDs_unique)):
+    DATA[pt] = [None] * 5
+    for per in range(5):
+         DATA[pt][per] = [None] * 4
+
+count_patient = 0
 for freq in range(4):
     for i in range(len(data)):
         #parsing data DataFrame to get iEEG information
@@ -244,7 +251,7 @@ for freq in range(4):
         FC_intersect_GMWM_mean_distances_order_GMWM = copy.deepcopy(FC_intersect_GMWM_mean_distances_order)
         for f in range(len(FC_intersect_GMWM_mean_distances_order_GMWM)):
             FC_intersect_GMWM_mean_distances_order_GMWM[f] = FC_intersect_GMWM_mean_distances_order_GMWM[f][distances_GM_ind[:,None], distances_WM_ind[None,:]] 
-        
+   
         FC_intersect_GMWM_mean_distances_order_GMWM_plot = copy.deepcopy(FC_intersect_GMWM_mean_distances_order)
         for f in range(len(FC_intersect_GMWM_mean_distances_order)):
             for r in range(len(distances)):
@@ -266,6 +273,7 @@ for freq in range(4):
                     if (electrode_1 > 0 and electrode_2 > 0): 
                         FC_intersect_GMWM_mean_GMWM_plot[f][r,c] =0
                         
+             
         
         tmp =  FC_intersect_GMWM_mean_distances_order_GMWM[freq]
         tm2p =  FC_intersect_GMWM_mean_distances_order_GMWM_plot[freq]
@@ -371,8 +379,9 @@ for freq in range(4):
         
         #############################################
         
-        
-        #%    
+
+        #%   
+
             
     
         #Network Analysis
@@ -518,15 +527,31 @@ for freq in range(4):
             
             df = pd.DataFrame( dict(   distance = dis1, FC = fc1, SC = sc, sc_log = sc_log  )  )
             
-
-            
+        DATA[count_patient][freq][per] = [SC,
+                               SC_distance_order,
+                               FC_intersect_GMWM_mean,
+                               FC_intersect_GMWM_mean_distances_order,
+                               FC_intersect_GMWM_mean_distances_order_GM,
+                               FC_intersect_GMWM_mean_distances_order_WM,
+                               FC_intersect_GMWM_mean_distances_order_GMWM,
+                               FC_intersect_GMWM_mean_distances_order_GMWM_plot,
+                               FC_intersect_GMWM_mean_distances_order_GMWM,
+                               FC_intersect_GMWM_mean_GMWM_plot,
+                               distance_matrix,
+                               distance_matrix_GM,
+                               distance_matrix_WM,
+                               electrode_localization_intersect_GMWM,
+                               electrode_localization_intersect_GMWM_distances_order
+                               ]
+        count_patient = count_patient + 1
+        """
          
             
             fig, ax = plt.subplots(nrows = 2, ncols=2,figsize=(10, 10), dpi = 600)
             sns.regplot(x = "distance", y = "FC", data = df, ax= ax[0][0], scatter_kws={'s':2})
             sns.residplot(x = "distance", y = "FC", data = df, ax= ax[0][1], scatter_kws={'s':2})
-            sns.regplot(x = "distance", y = "sc", data = df, ax= ax[1][0], scatter_kws={'s':2})
-            sns.residplot(x = "distance", y = "sc", data = df, ax= ax[1][1], scatter_kws={'s':2})
+            sns.regplot(x = "distance", y = "SC", data = df, ax= ax[1][0], scatter_kws={'s':2})
+            sns.residplot(x = "distance", y = "SC", data = df, ax= ax[1][1], scatter_kws={'s':2})
             
         
             mod = sm.OLS(df['FC'],sm.add_constant(df['distance']))
@@ -552,7 +577,7 @@ for freq in range(4):
             
            
             
-            mod = sm.OLS(df['sc'],sm.add_constant(df['distance']))
+            mod = sm.OLS(df['SC'],sm.add_constant(df['distance']))
             res = mod.fit()
             res.resid
             test = df[['distance']].drop_duplicates().sort_values('distance')
@@ -560,14 +585,14 @@ for freq in range(4):
             predictions = pd.concat([test,predictions.summary_frame(alpha=0.05)],axis=1)
             predictions.head()
             fig,axes = plt.subplots(1,3,figsize=(15,5))
-            sns.scatterplot(x='distance',y='sc',ax=axes[0],data=df)
+            sns.scatterplot(x='distance',y='SC',ax=axes[0],data=df)
             axes[0].plot(predictions['distance'], predictions['mean'], lw=2)
             axes[0].fill_between(x=predictions['distance'],
                                  y1=predictions['mean_ci_lower'],y2=predictions['mean_ci_upper'],
                                  facecolor='blue', alpha=0.2)
-            sns.scatterplot(x='distance',y='sc',ax=axes[1],
+            sns.scatterplot(x='distance',y='SC',ax=axes[1],
                             data=pd.DataFrame({'distance':df['distance'],
-                                              'sc':res.resid})
+                                              'SC':res.resid})
                             )
             axes[1].axhline(0, ls='--',color="k")
             sns.distplot(res.resid,ax=axes[2],bins=20)
@@ -576,9 +601,9 @@ for freq in range(4):
             
             from sklearn.linear_model import LinearRegression
             
-            model = LinearRegression().fit(  np.array(df['distance']).reshape(-1,1),     np.array(df['sc_log']).reshape(-1,1)  )   
+            model = LinearRegression().fit(  np.array(df['distance']).reshape(-1,1),     np.array(df['SC']).reshape(-1,1)  )   
             preds = model.predict(   np.array(df['distance']).reshape(-1,1)   )
-            res_structure = np.array(df['sc_log']).reshape(-1,1)    - preds
+            res_structure = np.array(df['SC']).reshape(-1,1)    - preds
               
             model = LinearRegression().fit(  np.array(df['distance']).reshape(-1,1),     np.array(df['FC']).reshape(-1,1)  )   
             preds = model.predict(   np.array(df['distance']).reshape(-1,1)   )
@@ -588,7 +613,7 @@ for freq in range(4):
               
             size = 1
             fig, ax = plt.subplots(nrows = 3, ncols=4,figsize=(22, 14), dpi = 600)
-            sns.scatterplot(x = "distance", y= "sc_log", data= df ,s=size, ax = ax[0][0])
+            sns.scatterplot(x = "distance", y= "SC", data= df ,s=size, ax = ax[0][0])
             sns.scatterplot(x = "distance", y= "FC", data= df ,s=size, ax = ax[0][1])
             sns.scatterplot(x = "distance", y= "SC_residuals", data= df ,s=size, ax = ax[0][2])
             sns.scatterplot(x = "distance", y= "FC_residuals", data= df ,s=size, ax = ax[0][3])
@@ -623,11 +648,7 @@ for freq in range(4):
             spearmanr(df["SC_residuals"], df["FC_residuals"])
             spearmanr(df["SC"], df["FC_residuals"])
             spearmanr(df["SC_residuals"], df["FC"])
-                
-            from sklearn.datasets import load_breast_cancer
-            tmp = load_breast_cancer()
-            tmp.target
-            
+
             distance_matrix
             
 
@@ -646,18 +667,19 @@ for freq in range(4):
             
             DATA
             DATA_FCi = 1
-            DATA_SCi = 3
-            threshold_SFC = 0.5
+            DATA_SCi = 0
+            threshold_SFC = 0.0
             threshold_ind = np.where(DATA[DATA_FCi] > threshold_SFC)
             
-            p = 20
+            p = 2
             p_list = []
             init = np.zeros(shape = (1,2))
             for p in range(len(threshold_ind[0])):
                 r = threshold_ind[0][p]
                 c = threshold_ind[1][p]
                 fun = DATA[DATA_FCi][r,c]
-                 
+                np.array(electrode_localization_intersect_GMWM_distances_order["electrode_name"])[r]
+                np.array(electrode_localization_intersect_GMWM_distances_order["electrode_name"])[c]
                 dist_i = DATA[2][r,c]
                 
                 tmp_dist = np.zeros(shape = (len(DATA[1] ),3 ))
@@ -685,40 +707,40 @@ for freq in range(4):
                 #print( "{0}: {1}".format(p,np.any(  (tmp_dist[:,0] >  th1) & (tmp_dist[:,1] > th1) & (tmp_dist[:,0] < th2)  & (tmp_dist[:,1] <  th2) )  ))
                 
                 p_list.append(np.any(  (tmp_dist[:,0] >  th1) & (tmp_dist[:,1] > th1) & (tmp_dist[:,0] < th2)  & (tmp_dist[:,1] <  th2) ))
-            
-                if (np.any(  (tmp_dist[:,0] >  th1) & (tmp_dist[:,1] > th1) & (tmp_dist[:,0] < th2)  & (tmp_dist[:,1] <  th2) ) == True):
-            
-                    c1 = np.where(  (tmp_dist[:,0] >  th1) & (tmp_dist[:,1] > th1) & (tmp_dist[:,0] < th2)  & (tmp_dist[:,1] <  th2)  )[0][0]
-                    np.array(electrode_localization_intersect_GMWM_distances_order["electrode_name"])[c1]
-                    
-                    #tmp_dist = np.delete(tmp_dist,  [r, c], axis=0)
-                    #tmp_dist_names = np.delete(np.array(electrode_localization_intersect_GMWM_distances_order["electrode_name"]), [r, c])
-                    
-                    #finding electrode most equidistant to the other two electrodes
-                    #c1 = np.where(tmp_dist_names[np.where(np.min(tmp_dist[:,2])== tmp_dist[:,2])[0][0]] == np.array(electrode_localization_intersect_GMWM_distances_order["electrode_name"]))[0][0]
-                    
-                    #tmp_dist = np.abs(np.delete(DATA[2][r,:]- dist_i,c))
-                    #c1 = np.where(  np.abs(DATA[2][r,:] - dist_i) == np.min( np.abs(tmp_dist))     )[0][0]
-                    fun1 = DATA[DATA_FCi][r,c1]
-                    dist_i1 = DATA[2][r,c1]
-                    fun2 = DATA[DATA_FCi][c,c1]
-                    dist_i2 = DATA[2][c,c1]
-                    
-                    struc = DATA[DATA_SCi][r,c]
-                    struc1 = DATA[DATA_SCi][r,c1]
-                    struc2 = DATA[DATA_SCi][c,c1]
-                    """
-                    print("\n{2}-{3}: {0}. {1}mm. {9}\n{2}-{4}: {5}. {6}mm. {10}\n{3}-{4}: {7}. {8}mm. {11}".format(np.round(fun,2), np.round(dist_i,2), DATA[4].iloc[r]["electrode_name"], DATA[4].iloc[c]["electrode_name"] ,
-                                                           DATA[4].iloc[c1]["electrode_name"], np.round(fun1,2), np.round(dist_i1,2),
-                                                           np.round(fun2,2), np.round(dist_i2,2),
-                                                           np.round(struc,2), np.round(struc1,2), np.round(struc2,2))
-                          )
-                    """
-                    #print (  "{0}, {1}".format(np.round(fun-fun1,2), np.round(struc-struc1,2) ))
+                if dist_i>0:
+                    if (np.any(  (tmp_dist[:,0] >  th1) & (tmp_dist[:,1] > th1) & (tmp_dist[:,0] < th2)  & (tmp_dist[:,1] <  th2) ) == True):
                 
+                        c1 = np.where(  (tmp_dist[:,0] >  th1) & (tmp_dist[:,1] > th1) & (tmp_dist[:,0] < th2)  & (tmp_dist[:,1] <  th2)  )[0][0]
+                        np.array(electrode_localization_intersect_GMWM_distances_order["electrode_name"])[c1]
+                        
+                        #tmp_dist = np.delete(tmp_dist,  [r, c], axis=0)
+                        #tmp_dist_names = np.delete(np.array(electrode_localization_intersect_GMWM_distances_order["electrode_name"]), [r, c])
+                        
+                        #finding electrode most equidistant to the other two electrodes
+                        #c1 = np.where(tmp_dist_names[np.where(np.min(tmp_dist[:,2])== tmp_dist[:,2])[0][0]] == np.array(electrode_localization_intersect_GMWM_distances_order["electrode_name"]))[0][0]
+                        
+                        #tmp_dist = np.abs(np.delete(DATA[2][r,:]- dist_i,c))
+                        #c1 = np.where(  np.abs(DATA[2][r,:] - dist_i) == np.min( np.abs(tmp_dist))     )[0][0]
+                        fun1 = DATA[DATA_FCi][r,c1]
+                        dist_i1 = DATA[2][r,c1]
+                        fun2 = DATA[DATA_FCi][c,c1]
+                        dist_i2 = DATA[2][c,c1]
+                        
+                        struc = DATA[DATA_SCi][r,c]
+                        struc1 = DATA[DATA_SCi][r,c1]
+                        struc2 = DATA[DATA_SCi][c,c1]
+                        
+                        print("\n{2}-{3}: {0}. {1}mm. {9}\n{2}-{4}: {5}. {6}mm. {10}\n{3}-{4}: {7}. {8}mm. {11}".format(np.round(fun,2), np.round(dist_i,2), DATA[4].iloc[r]["electrode_name"], DATA[4].iloc[c]["electrode_name"] ,
+                                                               DATA[4].iloc[c1]["electrode_name"], np.round(fun1,2), np.round(dist_i1,2),
+                                                               np.round(fun2,2), np.round(dist_i2,2),
+                                                               np.round(struc,2), np.round(struc1,2), np.round(struc2,2))
+                              )
+                        
+                        #print (  "{0}, {1}".format(np.round(fun-fun1,2), np.round(struc-struc1,2) ))
                     
-                    init = np.vstack(  (init ,  np.array([fun-fun1, struc-struc1]).reshape(1,2)) )
-                    
+                        
+                        init = np.vstack(  (init ,  np.array([fun-fun1, struc-struc1]).reshape(1,2)) )
+                        
    
             init = np.delete(init, 0, axis = 0)  
                 
@@ -728,8 +750,9 @@ for freq in range(4):
                 
             p_list = np.array(p_list)
             p_ind = np.where(p_list)
+    
         #############################################
-        """
+        
         #%
         #PLOT FOR PAPER
         ##############################%%
@@ -1787,10 +1810,10 @@ for freq in range(4):
             axs3[0,3].axis("off")    
             ofname_figure_adj = ospj(ofpath_figure_dataMining_subID, "NETWORKDIFF_{0}_{1}.pdf".format(sub_RID, order_of_matrices_in_pickle_file.iloc[freq][0]  ))
             plt.savefig(ofname_figure_adj)
-            
-    #%%
+  """        
+#%%
     
-"""
+
 
 for l in range(len(diff_FC_GMWM)):
     diff_FC_GMWM[l] = np.delete(diff_FC_GMWM[l], 0)
@@ -1804,6 +1827,8 @@ net_netMeasures_subjects_copy = copy.deepcopy(net_netMeasures_subjects)
 net_netMeasures_subjects = net_netMeasures_subjects.iloc[1:]
 net_nodeMeasures_subjects = net_nodeMeasures_subjects.iloc[1:]
 #%%
+colors = ["#c6b4a5", "#b6d4ee"]
+sns.set_palette(sns.color_palette(colors))
 
 
 df_long_GMGM_all_ii = pd.DataFrame({"Tissue": np.repeat("GM-GM", len(FC_GMGM_all_ii)), "FC": FC_GMGM_all_ii})
@@ -1901,10 +1926,11 @@ if (calculate_distances_boolean):
 #Regressing out distances
 
 per = range(4)
+fig,axes = plt.subplots(4,4,figsize=(20,5))
 for p in range(len(per)):
     FC_vs_distance = pd.concat([FC_df_long_all[p], df_long_distances.drop(["Tissue"], axis=1)   ], axis=1)
     plt.figure(dpi = 100)
-    plot =  sns.regplot(data =FC_vs_distance, x = "distances", y = "FC", marker='o', scatter_kws={'s':0.5});  plt.title("Distances vs FC {0}\n{1}".format(order_of_matrices_in_pickle_file.iloc[freq][0], descriptors[p] ))
+    #plot =  sns.regplot(data =FC_vs_distance, x = "distances", y = "FC", marker='o', scatter_kws={'s':0.5});  plt.title("Distances vs FC {0}\n{1}".format(order_of_matrices_in_pickle_file.iloc[freq][0], descriptors[p] ))
     
     
     
@@ -1915,20 +1941,70 @@ for p in range(len(per)):
     all(FC_df_long_all_ii["Tissue"] == df_long_distances["Tissue"])
     
     
-    OLS_model = sm.OLS(FC_vs_distance['FC'],FC_vs_distance['distances']).fit()  # training the model
+    OLS_model = sm.OLS(FC_vs_distance['FC'] , sm.add_constant ( FC_vs_distance['distances'])).fit()  # training the model
     predicted_values = OLS_model.predict()  # predicted values
+    OLS_model.resid
     residual_values = OLS_model.resid # residual values
     residual_values = residual_values.rename("residuals")
     
     FC_vs_distance_residuals = pd.concat([FC_vs_distance, residual_values],  axis=1)
     
     
-    plot = sns.displot( data =FC_vs_distance_residuals  , kind = "ecdf", x="residuals" , hue="Tissue"); plot.axes[0,0].set_ylim(0,); plt.title("{0} \n{1}".format(order_of_matrices_in_pickle_file.iloc[freq][0], descriptors[p]  ))
+    #plot = sns.displot( data =FC_vs_distance_residuals  , kind = "ecdf", x="residuals" , hue="Tissue"); plot.axes[p][0,0].set_ylim(0,); plt.title("{0} \n{1}".format(order_of_matrices_in_pickle_file.iloc[freq][0], descriptors[p]  ))
     FC_vs_distance_residuals["Tissue"]
     
 
     print("Significance: {0}, {1}: {2}".format(order_of_matrices_in_pickle_file.iloc[freq][0], descriptors[p] ,    mannwhitneyu(FC_vs_distance_residuals.loc[FC_vs_distance_residuals['Tissue'] == "GM-GM"]["residuals"] ,FC_vs_distance_residuals.loc[FC_vs_distance_residuals['Tissue'] == "WM-WM"]["residuals"]  )[1]))
+    
+    
+    mod = sm.OLS(FC_vs_distance['FC'],sm.add_constant(FC_vs_distance['distances']))
+    res = mod.fit()
+    res.resid
+    test = FC_vs_distance[['distances']].drop_duplicates().sort_values('distances')
+    predictions = res.get_prediction(sm.add_constant(test))
+    predictions = pd.concat([test,predictions.summary_frame(alpha=0.05)],axis=1)
+    predictions.head()
+    sns.scatterplot(x='distances',y='FC',ax=axes[p][0],data=FC_vs_distance, s= 1)
+    axes[p][0].plot(predictions['distances'], predictions['mean'], lw=2)
+    axes[p][0].fill_between(x=predictions['distances'],
+                         y1=predictions['mean_ci_lower'],y2=predictions['mean_ci_upper'],
+                         facecolor='blue', alpha=0.2)
+    sns.scatterplot(x='distances',y='FC',ax=axes[p][1], s = 1,
+                    data=pd.DataFrame({'distances':FC_vs_distance['distances'],
+                                      'FC':res.resid})
+                    )
+    axes[p][1].axhline(0, ls='--',color="k")
+    sns.histplot(res.resid,ax=axes[p][2],bins=20, kde=True)
+    
+    FC_vs_distance_residuals = pd.concat([FC_vs_distance, pd.DataFrame( dict(residuals=res.resid))],  axis=1)
+    sns.ecdfplot( data =FC_vs_distance_residuals  , x="residuals" , hue="Tissue", ax=axes[p][3]);# ax=axes[p][3].set_ylim(0,); #plt.title("{0} \n{1}".format(order_of_matrices_in_pickle_file.iloc[freq][0], descriptors[p]  ))
+ 
+    
+    
+    
+    model = LinearRegression().fit(  np.array(FC_vs_distance['distances']).reshape(-1,1),     np.array(FC_vs_distance['FC']).reshape(-1,1)  )   
+    preds = model.predict(   np.array(FC_vs_distance['distances']).reshape(-1,1)   )
+    res_function = np.array(FC_vs_distance['FC']).reshape(-1,1)    - preds
   
+
+from pygam import LinearGAM, s, f
+X0 = FC_vs_distance[['distances']].to_numpy()
+y0 = FC_vs_distance['FC'].to_numpy()
+gam = LinearGAM(s(0) ).fit(X0, y0)
+
+r0 = gam.deviance_residuals(X0, y0)
+
+
+y1 = gam.predict(X0)
+y0 - y1
+
+fig,axes = plt.subplots(1,4,figsize=(15,5), dpi = 300)
+sns.scatterplot(x=X0.flatten() ,y=y0 ,ax=axes[0], s = 1)
+sns.scatterplot(x=X0.flatten() ,y=y1 ,ax=axes[0], s = 1)
+
+FC_vs_distance_residuals = pd.concat([FC_vs_distance.reset_index(drop=True), pd.DataFrame( dict(residuals=r0))],  axis=1)
+sns.ecdfplot( data =FC_vs_distance_residuals  , x="residuals" , hue="Tissue");# ax=axes[p][3].set_ylim(0,); #plt.title("{0} \n{1}".format(order_of_matrices_in_pickle_file.iloc[freq][0], descriptors[p]  ))
+ 
     
 #%%
 # Set your custom color palette
