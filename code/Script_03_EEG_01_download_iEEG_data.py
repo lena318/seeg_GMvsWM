@@ -30,7 +30,6 @@ Input:
     username: first argument. Your iEEG.org username
     password: second argument. Your iEEG.org password
 
-    
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Output:
     
@@ -39,22 +38,21 @@ Output:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Example:
 
-    python3.6 Script_02_download_iEEG_data.py 'username' 'password'
-
-    Note: may need to use "double quotes" for username and/or password if they have special characters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 """
 
 
 #%%
-path = "/media/arevell/sharedSSD1/linux/papers/paper005" #Parent directory of project
+path = "/media/arevell/sharedSSD/linux/papers/paper005" #Parent directory of project
 import sys
 import os
+import pandas as pd
 from os.path import join as ospj
+
+#import custom
 sys.path.append(ospj(path, "seeg_GMvsWM", "code", "tools"))
 sys.path.append(ospj(path, "seeg_GMvsWM", "code" ,"tools", "ieegpy"))
 from download_iEEG_data import get_iEEG_data
-import pandas as pd
 
 #%% Input/Output Paths and File names
 ifname_EEG_times = ospj(path,"data/data_raw/iEEG_times/EEG_times.xlsx")

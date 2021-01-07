@@ -52,28 +52,44 @@ import pandas as pd
 import nibabel as nib
 import copy
 import matplotlib.pyplot as plt
+import os
 
 
-def by_region(electrode_coordinates_path, atlas_path, outputfile):
+def by_region(ifname_electrode_localization_sub_ID, ifname_atlas_path, ifname_atlas_labels_path, ofname, noLabels=False):
     """
     electrode_coordinates_path = ifname_electrode_localization_sub_ID
-    atlas_path = ifname_seg_sub_ID
+    ifname_atlas_path = ifname_seg_sub_ID
     outputfile = ospj(ofpath_localization_files, "sub-{0}_GM_WM_CSF.csv".format(sub_ID))
     """
     # getting imaging data
-    img = nib.load(atlas_path)
+    img = nib.load(ifname_atlas_path)
     img_data = img.get_fdata()  # getting actual image data array
     #aff = img.affine  # get affine transformation in atals. Helps us convert real-world coordinates to voxel locations
 
-    show_slices(img_data)
+    #show_slices(img_data)
     
     affine = img.affine
     print(nib.aff2axcodes(affine))
 
+    if noLabels == False:
+        #getting atlas labels file
+        atlas_labels = pd.read_csv(ifname_atlas_labels_path, sep=",", header=None)
+        column_description1 = "{0}_region_number".format(atlas_labels.iloc[0,0])
+        column_description2 = "{0}_label".format(atlas_labels.iloc[0,0])
+        atlas_labels = atlas_labels.drop([0, 1], axis=0).reset_index(drop=True)
+        atlas_regions_numbers = np.array(atlas_labels.iloc[:,0]).astype("float64")
+        atlas_labels_descriptors = np.array(atlas_labels.iloc[:,1])
+    if noLabels == True:
+        atlas_regions_numbers = np.arange(0,   np.max(img_data)+1 )
+        atlas_labels_descriptors = np.arange(0,   np.max(img_data)+1 ).astype("int").astype("object")
+        atlas_name = os.path.splitext(os.path.basename(ifname_atlas_path))[0]
+        atlas_name = os.path.splitext(atlas_name)[0]
+        column_description1 = "{0}_region_number".format(atlas_name)
+        column_description2 = "{0}_label".format(atlas_name)
     # getting electrode coordinates data
-    data = pd.read_csv(electrode_coordinates_path, sep=",", header=None)
+    data = pd.read_csv(ifname_electrode_localization_sub_ID, sep=",", header=None)
     data = data.iloc[:, [0, 10, 11, 12]]
-    column_names = ['electrode_name', "x_coordinate", "y_coordinate", "z_coordinate", "region_number"]
+    column_names = ['electrode_name', "x_coordinate", "y_coordinate", "z_coordinate", column_description1,column_description2 ]
     data = data.rename(
         columns={data.columns[0]: column_names[0], data.columns[1]: column_names[1], data.columns[2]: column_names[2],
                  data.columns[3]: column_names[3]})
@@ -101,25 +117,43 @@ def by_region(electrode_coordinates_path, atlas_path, outputfile):
             else:
                 img_ROI[i] = img_data[coordinates_voxels[i,0]-1, coordinates_voxels[i,1]-1, coordinates_voxels[i,2]-1]
 
+    
+    #getting corresponding labels
+    img_labels = np.zeros(shape =img_ROI.shape ).astype("object")
+    for l in range(len(img_ROI)):
+        ind = np.where( img_ROI[l] ==    atlas_regions_numbers)
+        if len(ind[0]) >0: #if there is a correpsonding label, then fill in that label. If not, put "unknown"
+            if img_ROI[l] ==0: #if label is 0, then outside atlas
+                img_labels[l] = "OutsideAtlas"
+            img_labels[l] = atlas_labels_descriptors[ind][0]
+        else:
+            img_labels[l] = "NotInAtlas"
+        
+    
     img_ROI = np.reshape(img_ROI, [img_ROI.shape[0], 1])
     img_ROI = img_ROI.astype(int)
-    img_ROI = pd.DataFrame(img_ROI)
-    data = pd.concat([data, img_ROI], axis=1)
-    data = data.rename(columns={data.columns[4]: column_names[4]})
-    pd.DataFrame.to_csv(data, outputfile, header=True, index=False)
+    df_img_ROI = pd.DataFrame(img_ROI)
+    df_img_ROI.columns = [column_names[4]]
+    img_labels = np.reshape(img_labels, [img_labels.shape[0], 1])
+    df_img_labels = pd.DataFrame( img_labels)
+    df_img_labels.columns = [column_names[5]]
+    data = pd.concat([data, df_img_ROI, df_img_labels], axis=1)
+    
+    pd.DataFrame.to_csv(data, ofname, header=True, index=False)
 
 
-def distance_from_label(electrode_coordinates_path, atlas_path, label, outputfile):
+def distance_from_label(ifname_electrode_localization_sub_ID, ifname_atlas_path, label, ifname_atlas_labels_path, ofname):
     """
     electrode_coordinates_path = ifname_electrode_localization_sub_ID
     atlas_path = ifname_seg_sub_ID
     label = 2
     outputfile =  ospj(ofpath_localization_files, "sub-{0}_WM_distance.csv".format(sub_ID))
+    description = "tissue_segmentation"
 
     """
 
     # getting imaging data
-    img = nib.load(atlas_path)
+    img = nib.load(ifname_atlas_path)
     img_data = img.get_fdata()  # getting actual image data array
     #aff = img.affine  # get affine transformation in atals. Helps us convert real-world coordinates to voxel locations
 
@@ -129,9 +163,12 @@ def distance_from_label(electrode_coordinates_path, atlas_path, label, outputfil
     print(nib.aff2axcodes(affine))
 
     # getting electrode coordinates data
-    data = pd.read_csv(electrode_coordinates_path, sep=",", header=None)
+    data = pd.read_csv(ifname_electrode_localization_sub_ID, sep=",", header=None)
     data = data.iloc[:, [0, 10, 11, 12]]
-    column_names = ['electrode_name', "x_coordinate", "y_coordinate", "z_coordinate", "distances_label_{0}".format(label)]
+    
+    atlas_labels = pd.read_csv(ifname_atlas_labels_path, sep=",", header=None)
+    column_description = "{0}_distance_from_label_{1}".format(atlas_labels.iloc[0,0], label)
+    column_names = ['electrode_name', "x_coordinate", "y_coordinate", "z_coordinate", column_description]
     data = data.rename(
         columns={data.columns[0]: column_names[0], data.columns[1]: column_names[1], data.columns[2]: column_names[2],
                  data.columns[3]: column_names[3]})
@@ -178,7 +215,7 @@ def distance_from_label(electrode_coordinates_path, atlas_path, label, outputfil
     data = pd.concat([data, distances], axis=1)
     data = data.rename(columns={data.columns[4]: column_names[4]})
 
-    pd.DataFrame.to_csv(data, outputfile, header=True, index=False)
+    pd.DataFrame.to_csv(data, ofname, header=True, index=False)
 
 
 def find_dist_to_label(point, labelInds):
