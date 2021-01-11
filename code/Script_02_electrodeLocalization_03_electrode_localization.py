@@ -78,16 +78,30 @@ for i in range(len(sub_IDs_unique)):
     #Atlas input names
     ifname_atlas_path = ifname_seg_sub_ID
     ifname_atlas_labels_path = ospj( ifpath_atlas_labels, "tissue_segmentation.csv")
-    ofname = ospj(ofpath_localization_files, f"sub-{sub_ID}_00_GM_WM_CSF.csv")
     
     #############
     #############
     #localization by region to tissue segmentation
+    ofname = ospj(ofpath_localization_files, f"sub-{sub_ID}_00_GM_WM_CSF.csv")
     electrode_localization.by_region(ifname_electrode_localization_sub_ID, ifname_atlas_path, ifname_atlas_labels_path, ofname, noLabels=False)
-    ofname = ospj(ofpath_localization_files, f"sub-{sub_ID}_00_WM_distance.csv")
+    df = pd.read_csv(ofname, sep=",", header=0)
+    for e in range(len( df  )):
+        electrode_name = df.iloc[e]["electrode_name"]
+        if (len(electrode_name) == 3): electrode_name = f"{electrode_name[0:2]}0{electrode_name[2]}"
+        df.at[e, "electrode_name" ] = electrode_name
+    pd.DataFrame.to_csv(df, ofname, header=True, index=False)
+    
+    
     #distance to tissue 
+    ofname = ospj(ofpath_localization_files, f"sub-{sub_ID}_00_WM_distance.csv")
     if not os.path.exists(ofname):
         electrode_localization.distance_from_label(ifname_electrode_localization_sub_ID, ifname_atlas_path, 2,ifname_atlas_labels_path, ofname)
+    df = pd.read_csv(ofname, sep=",", header=0)
+    for e in range(len( df  )):
+        electrode_name = df.iloc[e]["electrode_name"]
+        if (len(electrode_name) == 3): electrode_name = f"{electrode_name[0:2]}0{electrode_name[2]}"
+        df.at[e, "electrode_name" ] = electrode_name
+    pd.DataFrame.to_csv(df, ofname, header=True, index=False)
     
     #All other atlases
     for a in range(len(atlases)):
@@ -105,6 +119,14 @@ for i in range(len(sub_IDs_unique)):
         ofname = ospj(ofpath_localization_files, f"sub-{sub_ID}_{atlas_name_base}.csv")
         electrode_localization.by_region(ifname_electrode_localization_sub_ID, ifname_atlas_path, ifname_atlas_labels_path, ofname, noLabels=noLabels)
 
+        #rename channels to standard 4 characters (2 letters, 2 numbers)
+        df = pd.read_csv(ofname, sep=",", header=0)
+        for e in range(len( df  )):
+            electrode_name = df.iloc[e]["electrode_name"]
+            if (len(electrode_name) == 3): electrode_name = f"{electrode_name[0:2]}0{electrode_name[2]}"
+            df.at[e, "electrode_name" ] = electrode_name
+        pd.DataFrame.to_csv(df, ofname, header=True, index=False)
+        
     #Concatenate files into one
     data = pd.read_csv(ospj(ofpath_localization_files, f"sub-{sub_ID}_00_GM_WM_CSF.csv"), sep=",", header=0)
     data = pd.concat([data, pd.read_csv(ospj(ofpath_localization_files, f"sub-{sub_ID}_00_WM_distance.csv"), sep=",", header=0).iloc[:,4:] ]  , axis = 1)

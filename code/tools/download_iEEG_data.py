@@ -46,10 +46,11 @@ with open(outputfile, 'rb') as f: data, fs = pickle.load(f)
 """
 from ieeg.auth import Session
 import pandas as pd
-import pickle
+#import pickle
 import numpy as np
+import os
 
-def get_iEEG_data(username, password, iEEG_filename, start_time_usec, stop_time_usec, ignore_electrodes, outputfile):
+def get_iEEG_data(username, password, iEEG_filename, start_time_usec, stop_time_usec, ignore_electrodes, outputfile_EEG):
     print("\nGetting data from iEEG.org:")
     print("iEEG_filename: {0}".format(iEEG_filename))
     print("start_time_usec: {0}".format(start_time_usec))
@@ -77,10 +78,23 @@ def get_iEEG_data(username, password, iEEG_filename, start_time_usec, stop_time_
             print("{0}/{1}".format(i+1, len(break_times)-1))
             break_data[range(int( np.ceil((break_times[i]-break_times[0])/1e6*fs) ), int(  np.ceil((break_times[i+1]- break_times[0])/1e6*fs) )  ),:] = ds.get_data(break_times[i], break_times[i+1]-break_times[i], channels)
         data = break_data
+        
     df = pd.DataFrame(data, columns=ds.ch_labels)
     df = pd.DataFrame.drop(df, ignore_electrodes, axis=1)
-    print("Saving to: {0}".format(outputfile))
-    with open(outputfile, 'wb') as f: pickle.dump([df, fs], f)
+    #rename channels to standard 4 characters (2 letters, 2 numbers)
+    for e in range(len(df.columns)):
+        electrode_name = df.columns[e]
+        if (len(electrode_name) == 3): electrode_name = f"{electrode_name[0:2]}0{electrode_name[2]}"
+        df.columns.values[e] = electrode_name
+
+    print("Saving to: {0}".format(outputfile_EEG))
+    df.to_csv(outputfile_EEG, index=False)
+    
+    #save metadata like fs
+    df_metadata = pd.DataFrame([{'fs': fs} ] )
+    outputfile_EEG_metadata = os.path.splitext(outputfile_EEG)[0] + "_metadata.csv"
+    df_metadata.to_csv(outputfile_EEG_metadata, index=False)
+    #with open(outputfile_EEG, 'wb') as f: pickle.dump([df, fs], f)
     print("...done\n")
 
 

@@ -12,7 +12,7 @@ import os
 import numpy as np
 import nibabel as nib
 import matplotlib.pyplot as plt
-
+import seaborn as sns
 
 
 def show_slices(img_data, low = 0.33, middle = 0.5, high = 0.66):
@@ -40,13 +40,39 @@ def show_slices(img_data, low = 0.33, middle = 0.5, high = 0.66):
         axes[i].axis("off")
 
 
+def show_eeg_bysec(data, fs, channel = 0, start_sec = 0, stop_sec = 2):
+    data_ch = data[:,channel]
+
+    fig,axes = plt.subplots(1,1,figsize=(4,4), dpi = 300)
+    sns.lineplot(x =  np.array(range(fs*start_sec,fs*stop_sec))/1e6*fs, y = data_ch[range(fs*start_sec,fs*stop_sec)], ax = axes , linewidth=0.5 )
+    plt.show()
 
 
+def show_eeg(data, fs, channel = 0):
+    data_ch = data[:,channel]
+
+    fig,axes = plt.subplots(1,1,figsize=(4,4), dpi = 300)
+    sns.lineplot(x =  np.array(range(len(data_ch)))/1e6*fs, y = data_ch, ax = axes , linewidth=0.5 )
+    plt.show()
+
+
+def plot_adj(adj, vmin = -1, vmax = 1 ):
+    fig,axes = plt.subplots(1,1,figsize=(4,4), dpi = 300)
+    sns.heatmap(adj, square=True, ax = axes, vmin = vmin, vmax = vmax)
+
+def plot_adj_allbands(adj_list, vmin = -1, vmax = 1, titles = ["Broadband", "Delta", "Theta", "Alpha", "Beta", "Gamma - Low", "Gamma - Mid", "Gamma - High"] ):
+    fig,axes = plt.subplots(2,4,figsize=(16,9), dpi = 300)
+    count = 0
+    for x in range(2):
+        for y in range(4):
+            sns.heatmap(adj_list[count], square=True, ax = axes[x][y], vmin = vmin, vmax = vmax)
+            axes[x][y].set_title(titles[count], size=10)
+            count = count+1
 
 
 
 # Progress bar function
-def printProgressBar(iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = "X", printEnd = "\r"):
+def printProgressBar(iteration, total, prefix = '', suffix = '', decimals = 1, length = 20, fill = "X", printEnd = "\r"):
     """
     Call in a loop to create terminal progress bar
     @params:

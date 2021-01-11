@@ -33,6 +33,10 @@ from scipy import signal
 import pickle
 
 
+#def removeElectrodes():
+    
+
+
 def filter_eeg_data(inputfile, outputfile):
     print("opening {0} ".format(inputfile))
 

@@ -6,8 +6,6 @@ Andy Revell
 Purpose:
     1. To find the region in which an x, y, z coordinate is given - usually for electrode localizetion
 
-
-
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Logic of code:
     1. by atlas: Given a csv file with electrode coordinates, the atlas path, an mni template, it will output the corresponding region label in the atlas

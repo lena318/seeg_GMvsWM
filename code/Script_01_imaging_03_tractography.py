@@ -30,9 +30,11 @@ from os.path import join as ospj
 import seaborn as sns
 import matplotlib.pyplot as plt
 import time
+import multiprocessing
+from itertools import repeat
 sys.path.append(ospj(path, "seeg_GMvsWM", "code", "tools"))
 
-#%% Input/Output Paths and File names
+#% Input/Output Paths and File names
 ifname_diffusion_imaging = ospj( path, "data/data_raw/iEEG_times/diffusion_imaging.csv")
 ifname_atlases_csv = ospj( path, "data/data_raw/atlases/atlas_names.csv")
 ifpath_imaging_qsiprep = ospj( path, "data/data_processed/imaging/qsiprep/")
@@ -45,14 +47,14 @@ ofpath_connectivity = ospj( path, "data/data_processed/connectivity_matrices/str
 if not (os.path.isdir(ofpath_tractography)): os.makedirs(ofpath_tractography, exist_ok=True)
 if not (os.path.isdir(ofpath_connectivity)): os.makedirs(ofpath_connectivity, exist_ok=True)
 
-#%% Load Study Meta Data
+#% Load Study Meta Data
 data = pd.read_csv(ifname_diffusion_imaging) 
 atlases = pd.read_csv(ifname_atlases_csv)     
-#%% Processing Meta Data: extracting sub-IDs
+#% Processing Meta Data: extracting sub-IDs
 
 sub_IDs_unique = np.unique(data.RID)[np.argsort( np.unique(data.RID, return_index=True)[1])]
 
-#%% Paramter ID
+#% Paramter ID
 parameter_id = '7C1D393C9A99193FF3B3513Fb803Fcb2041bC84340420Fca01cbaCDCC4C3Ec'
 parameter_id = 'A323393C9A99193FF3B3513Fb803Fcb2041bC84340420Fca01cbaCDCC4C3Ec'
 parameter_id = 'D467313C9A99193FF3B3513Fb803Fcb2041b4844404B4Cca01cbaCDCC4C3Ec'
@@ -122,7 +124,8 @@ for i in range(len(sub_IDs_unique)):
 
 
 #%% Calculate get connectivity
-for i in range(len(sub_IDs_unique)):
+for i in range(0,41):
+    #def multiproc_conn(i):
     #parsing data DataFrame to get iEEG information
     sub_ID = sub_IDs_unique[i]
     print(f"\n\nSub-ID: {sub_ID}")
@@ -143,27 +146,40 @@ for i in range(len(sub_IDs_unique)):
 
 
     #getting atlases
-    for a in range(37):
+    #for a in range(37):
+    def multiproc_atlas(a):
         ifname_atlas = ospj(ifpath_atlas_registration_sub_ID, f"sub-{sub_ID}_preop3T_{np.array( atlases['atlas_filename'])[a]}")
         ofname_connectivity = ospj(ofpath_connectivity_subID, f"sub-{sub_ID}" )
         basename = os.path.splitext(os.path.splitext(f"sub-{sub_ID}_preop3T_{np.array( atlases['atlas_filename'])[a]}")[0])[0]
         basename2 = f"{ofname_connectivity}.{basename}.count.pass.connectogram.txt"
         if not (os.path.exists( basename2 )):
+            print( f"\nNew: {np.array(atlases['atlas_filename'])[a]}" )
             t0 = time.time()
             cmd = f"singularity exec --bind {path} ~/singularity/dsistudio_latest.sif dsi_studio --action=ana --source={ifname_dwi}.fib.gz --tract={ifname_dwi}.trk.gz --t1t2={ifname_T1_sub_ID} --connectivity={ifname_atlas} --connectivity_type=pass --connectivity_threshold=0 --output={ofname_connectivity}"
             os.system(cmd)
-            t1 = time.time(); td = int(np.round(t1-t0,0)); tr = int(np.round((37 - a- 2) * td/60,0))
-            print( f"{np.array(atlases['atlas_filename'])[a]}; time: {td} sec; Remain: {tr} min" )
+            t1 = time.time(); td = int(np.round(t1-t0,0)); #tr = int(np.round((37 - a- 2) * td/60,0))
+            print( f"{np.array(atlases['atlas_filename'])[a]}; time: {td} sec" )
 
+    p = multiprocessing.Pool(10)
+    p.map(multiproc_atlas, range(92)   )
+    p.close()
+    
+#multiprocess over multiple cores
+#p = multiprocessing.Pool(4)
+#p.map(multiproc_conn, range(20)   )
+#p.close()
 
 
 
 #%%visualize connectivity 
 
-for i in [0,1,2,3]:
+
+import bct        
+
+for i in [0]:
     sub_ID = sub_IDs_unique[i]
     ofname_connectivity = ospj(ofpath_connectivity, f"sub-{sub_ID}", f"sub-{sub_ID}" )
-    for a in [0,10,20]:   
+    for a in [80]:   
         basename = os.path.splitext(os.path.splitext(f"sub-{sub_ID}_preop3T_{np.array( atlases['atlas_filename'])[a]}")[0])[0]
         df = pd.read_csv(f"{ofname_connectivity}.{basename}.count.pass.connectogram.txt", sep="\t", header=None)
         df = df.drop([0,1], axis=0)
@@ -175,9 +191,21 @@ for i in [0,1,2,3]:
         fig.suptitle(f"sub-{sub_ID}  {np.array( atlases['atlas_name'])[a]}")        
         
         
-        
-        
-        
+for i in [0]:
+    sub_ID = sub_IDs_unique[i]
+    ofname_connectivity = ospj(ofpath_connectivity, f"sub-{sub_ID}", f"sub-{sub_ID}" )
+    for a in [150]:   
+        basename = os.path.splitext(os.path.splitext(f"sub-{sub_ID}_preop3T_{np.array( atlases['atlas_filename'])[a]}")[0])[0]
+        if os.path.exists(f"{ofname_connectivity}.{basename}.count.pass.connectogram.txt"):
+            
+            df = pd.read_csv(f"{ofname_connectivity}.{basename}.count.pass.connectogram.txt", sep="\t", header=None)
+            df = df.drop([0,1], axis=0)
+            df = df.drop([0,1], axis =1)
+            df = df.drop(df.columns[-1], axis =1)
+            data = np.array(df).astype("float64")
+            print(f"{basename}\n{bct.density_und(data)}")
+            
+              
         
         
         

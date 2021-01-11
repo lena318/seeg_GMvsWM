@@ -97,8 +97,8 @@ def get_Functional_connectivity_windowed(inputfile,outputfile):
     with open(inputfile, 'rb') as f: data, fs = pickle.load(f)#un-pickles files
     data_array = np.array(data)
     fs = float(fs)
-    moving_window = (1/5) #window moved over 1/5th of a second when this value = (1/5)
-    window_size = 1 #1 = 1s econds
+    moving_window = 1 #window moved over 1/5th of a second when this value = (1/5)
+    window_size = 2 #1 = 1s econds
     totalSecs = np.floor(np.size(data_array,0)/fs/ moving_window)
     totalSecs = int(totalSecs)
     alphatheta = np.zeros((np.size(data_array,1),np.size(data_array,1),totalSecs))
