@@ -110,21 +110,22 @@ for i in range(len(sub_IDs_unique)):
         cmd = f"singularity exec --bind {path} ~/singularity/dsistudio_latest.sif dsi_studio --action=rec --source={ofname_dwi}.src.gz --method=4 --param0=1.25"
         os.system(cmd)
         #rename dsistudio output of .fib file because there is no way to output a specific name on cammnad line
-        cmd = "mv {0}*.fib.gz {0}.fib.gz".format(ofname_dwi)
+        cmd = "mv {0}.src*.fib.gz {0}.fib.gz".format(ofname_dwi)
         os.system(cmd)
         print("Creating Tractography File in DSI Studio")
         cmd = f"singularity exec --bind /media ~/singularity/dsistudio_latest.sif dsi_studio --action=trk --source={ofname_dwi}.fib.gz --parameter_id={parameter_id} --output={ofname_dwi}.trk.gz"
         cmd = f"singularity exec --bind /media ~/singularity/dsistudio_latest.sif dsi_studio --action=trk --source={ofname_dwi}.fib.gz --min_length=30 --max_length=300 --thread_count=24 --fiber_count=5000000 --output={ofname_dwi}.trk.gz"
+        cmd = f"singularity exec --bind /media ~/singularity/dsistudio_latest.sif dsi_studio --action=trk --source={ofname_dwi}.fib.gz --min_length=10 --max_length=800 --thread_count=24 --fiber_count=1000000 --output={ofname_dwi}.trk.gz"
         os.system(cmd)
         t1 = time.time()
         td = np.round(t1-t0,2)
-        tr = np.round((len(sub_IDs_unique) - i- 2) * td,2)
+        tr = np.round((len(sub_IDs_unique) - i- 1) * td,2)
         print(f"Took {td} seconds. Estimated time remaining: {tr} seconds")
 
 
 
 #%% Calculate get connectivity
-for i in range(0,41):
+for i in range(len(sub_IDs_unique)):
     #def multiproc_conn(i):
     #parsing data DataFrame to get iEEG information
     sub_ID = sub_IDs_unique[i]
@@ -146,8 +147,8 @@ for i in range(0,41):
 
 
     #getting atlases
-    #for a in range(37):
-    def multiproc_atlas(a):
+    for a in range(90,108):
+    #def multiproc_atlas(a):
         ifname_atlas = ospj(ifpath_atlas_registration_sub_ID, f"sub-{sub_ID}_preop3T_{np.array( atlases['atlas_filename'])[a]}")
         ofname_connectivity = ospj(ofpath_connectivity_subID, f"sub-{sub_ID}" )
         basename = os.path.splitext(os.path.splitext(f"sub-{sub_ID}_preop3T_{np.array( atlases['atlas_filename'])[a]}")[0])[0]
@@ -160,9 +161,9 @@ for i in range(0,41):
             t1 = time.time(); td = int(np.round(t1-t0,0)); #tr = int(np.round((37 - a- 2) * td/60,0))
             print( f"{np.array(atlases['atlas_filename'])[a]}; time: {td} sec" )
 
-    p = multiprocessing.Pool(10)
-    p.map(multiproc_atlas, range(92)   )
-    p.close()
+    #p = multiprocessing.Pool(10)
+    #p.map(multiproc_atlas, range(70, 90)   )
+    #p.close()
     
 #multiprocess over multiple cores
 #p = multiprocessing.Pool(4)
@@ -173,7 +174,7 @@ for i in range(0,41):
 
 #%%visualize connectivity 
 
-
+"""
 import bct        
 
 for i in [0]:
@@ -207,7 +208,7 @@ for i in [0]:
             
               
         
-        
+"""    
         
         
         

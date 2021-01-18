@@ -387,28 +387,28 @@ def coherence_wrapper(data, fs, param = param, avgref=True):
         data_ref = data.copy()
     data_ref_60 = elliptic(data_ref, fs, **param['Notch_60Hz'])
     
-    print("Coherencae Broadband")
+    print("Coherence Broadband")
     band = "Broadband"
     adj_coherence_bb = coherence_connectivity(data_ref_60, fs, param[band]['wp'])
-    print("Coherencae Delta")
+    print("Coherence Delta")
     band = "delta"
     adj_coherence_d = coherence_connectivity(data_ref_60, fs, param[band]['wp'])
-    print("Coherencae Theta")
+    print("Coherence Theta")
     band = "theta"
     adj_coherence_t = coherence_connectivity(data_ref_60, fs, param[band]['wp'])
-    print("Coherencae Alpha")
+    print("Coherence Alpha")
     band = "alpha"
     adj_coherence_a = coherence_connectivity(data_ref_60, fs, param[band]['wp'])
-    print("Coherencae Beta")
+    print("Coherence Beta")
     band = "beta"
     adj_coherence_b = coherence_connectivity(data_ref_60, fs, param[band]['wp'])
-    print("Coherencae Gamma - Low")
+    print("Coherence Gamma - Low")
     band = "gammaLow"
     adj_coherence_gl = coherence_connectivity(data_ref_60, fs, param[band]['wp'])
-    print("Coherencae Gamma - Mid")
+    print("Coherence Gamma - Mid")
     band = "gammaMid"
     adj_coherence_gm = coherence_connectivity(data_ref_60, fs, param[band]['wp'])
-    print("Coherencae Gamma - High")
+    print("Coherence Gamma - High")
     band = "gammaHigh"
     adj_coherence_gh = coherence_connectivity(data_ref_60, fs, param[band]['wp'])
 
@@ -1127,7 +1127,6 @@ def plot_adj_allbands(adj_list, vmin = -1, vmax = 1, titles = ["Broadband", "Del
             sns.heatmap(adj_list[count], square=True, ax = axes[x][y], vmin = vmin, vmax = vmax)
             axes[x][y].set_title(titles[count], size=10)
             count = count+1
-
 
 
 #%%

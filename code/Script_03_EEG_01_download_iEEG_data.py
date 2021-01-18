@@ -62,11 +62,9 @@ ifname_EEG_times = ospj(path,"data/data_raw/iEEG_times/EEG_times.xlsx")
 ofpath_EEG = ospj(path,"data/data_raw/EEG")
                               
 #%% Load username and password input from command line arguments
-#username= sys.argv[1]
-#password= sys.argv[2]
+username= sys.argv[1]
+password= sys.argv[2]
 
-username = 'arevell'
-password = 'Zoro11!!'
 
 #%% Load Study Meta Data
 data = pd.read_excel(ifname_EEG_times)    
@@ -88,10 +86,10 @@ def parse_ieeg(data, i):
     outputfile_EEG = ospj(f"{ofpath_EEG_sub_ID}", f"sub-{sub_ID}_{iEEG_filename}_{start_time_usec}_{stop_time_usec}_EEG.csv")
     print(f"\n\n\nID: {sub_ID}\nDescriptor: {descriptor}")
     
-    #if (os.path.exists(outputfile_EEG)):
-    #    print(f"File already exists: {outputfile_EEG}")
-    #else:#if file already exists, don't run below
-    get_iEEG_data(username,password,iEEG_filename, start_time_usec, stop_time_usec, ignore_electrodes, outputfile_EEG)
+    if (os.path.exists(outputfile_EEG)):
+        print(f"File already exists: {outputfile_EEG}")
+    else:#if file already exists, don't run below
+        get_iEEG_data(username,password,iEEG_filename, start_time_usec, stop_time_usec, ignore_electrodes, outputfile_EEG)
 
 p = multiprocessing.Pool(4)
 p.starmap(parse_ieeg, zip(repeat(data), range(len(data))    )   )

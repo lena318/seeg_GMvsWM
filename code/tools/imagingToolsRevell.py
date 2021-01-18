@@ -56,16 +56,16 @@ def show_eeg(data, fs, channel = 0):
     plt.show()
 
 
-def plot_adj(adj, vmin = -1, vmax = 1 ):
+def plot_adj(adj, vmin = -1, vmax = 1, cbar = True ):
     fig,axes = plt.subplots(1,1,figsize=(4,4), dpi = 300)
-    sns.heatmap(adj, square=True, ax = axes, vmin = vmin, vmax = vmax)
+    sns.heatmap(adj, square=True, ax = axes, vmin = vmin, vmax = vmax, cbar = cbar)
 
-def plot_adj_allbands(adj_list, vmin = -1, vmax = 1, titles = ["Broadband", "Delta", "Theta", "Alpha", "Beta", "Gamma - Low", "Gamma - Mid", "Gamma - High"] ):
-    fig,axes = plt.subplots(2,4,figsize=(16,9), dpi = 300)
+def plot_adj_allbands(adj_list, cbar=True, vmin = -1, vmax = 1, titles = ["Broadband", "Delta", "Theta", "Alpha", "Beta", "Gamma - Low", "Gamma - Mid", "Gamma - High"] ):
+    fig,axes = plt.subplots(2,4,figsize=(14,7), dpi = 80)
     count = 0
     for x in range(2):
         for y in range(4):
-            sns.heatmap(adj_list[count], square=True, ax = axes[x][y], vmin = vmin, vmax = vmax)
+            sns.heatmap(adj_list[count], square=True, ax = axes[x][y], vmin = vmin, vmax = vmax, cbar=cbar)
             axes[x][y].set_title(titles[count], size=10)
             count = count+1
 
