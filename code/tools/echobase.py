@@ -472,8 +472,6 @@ def pearson_connectivity(data, fs):
 
     # Retrieve data attributes
     n_samp, n_chan = data.shape
-
-    n_samp, n_chan = data.shape
     triu_ix, triu_iy = np.triu_indices(n_chan, k=1)
 
     # Initialize adjacency matrix
@@ -496,8 +494,6 @@ def pearson_connectivity(data, fs):
 def spearman_connectivity(data, fs):
     
     # Retrieve data attributes
-    n_samp, n_chan = data.shape
-
     n_samp, n_chan = data.shape
     triu_ix, triu_iy = np.triu_indices(n_chan, k=1)
 
@@ -570,10 +566,10 @@ def crossCorrelation_connectivity(data_hat, fs, tau, absolute=False):
     for n1, n2 in zip(triu_ix, triu_iy):
         t0 = time.time()
         xc = 1 / n_samp * np.fft.irfft( data_hat_fft[:, n1] * np.conj(data_hat_fft[:, n2]))
-        if absolute==True:
+        if absolute:
             adj[n1, n2] = np.max( np.abs(xc[tau_ix])  )
         #taking the absolute max value, whether negative or positive, but preserving sign
-        elif absolute==False:
+        elif not absolute:
             if xc[tau_ix].max() > np.abs(xc[tau_ix].min()):
                 adj[n1, n2] = xc[tau_ix].max()
             else:
@@ -589,8 +585,6 @@ def mutualInformation_connectivity(data_hat, fs):
     #https://scikit-learn.org/stable/modules/generated/sklearn.feature_selection.mutual_info_regression.html#id6
     
     # Retrieve data_hat attributes
-    n_samp, n_chan = data_hat.shape
-
     n_samp, n_chan = data_hat.shape
     triu_ix, triu_iy = np.triu_indices(n_chan, k=1)
 
@@ -662,7 +656,7 @@ def coherence_connectivity(data_hat, fs, cf):
             out = signal.coherence(x= data_hat[:, n1],
                                    y = data_hat[:, n2],
                                    fs = fs,
-                                   window= range(int(fs-fs/3)) #if n_samp = fs, the window has to be less than fs, or else you will get output as all ones. So I modified to be fs - -fs/3, and not just fs
+                                   window= range(int(fs-fs/3)) #if n_samp = fs, the window has to be less than fs, or else you will get output as all ones. So I modified to be fs - fs/3, and not just fs
                                    )
 
             # Find closest frequency to the desired center frequency
