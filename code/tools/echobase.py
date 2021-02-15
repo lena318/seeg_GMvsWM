@@ -377,29 +377,21 @@ def coherence_wrapper(data, fs, param = param, avgref=True):
     data_ref_60 = elliptic(data_ref, fs, **param['Notch_60Hz'])
     
     print("Coherence Broadband")
-    band = "Broadband"
-    adj_coherence_bb = coherence_connectivity(data_ref_60, fs, param[band]['wp'])
+    adj_coherence_bb = coherence_connectivity(data_ref_60, fs, param["Broadband"]['wp'])
     print("Coherence Delta")
-    band = "delta"
-    adj_coherence_d = coherence_connectivity(data_ref_60, fs, param[band]['wp'])
+    adj_coherence_d = coherence_connectivity(data_ref_60, fs, param["delta"]['wp'])
     print("Coherence Theta")
-    band = "theta"
-    adj_coherence_t = coherence_connectivity(data_ref_60, fs, param[band]['wp'])
+    adj_coherence_t = coherence_connectivity(data_ref_60, fs, param["theta"]['wp'])
     print("Coherence Alpha")
-    band = "alpha"
-    adj_coherence_a = coherence_connectivity(data_ref_60, fs, param[band]['wp'])
+    adj_coherence_a = coherence_connectivity(data_ref_60, fs, param["alpha"]['wp'])
     print("Coherence Beta")
-    band = "beta"
-    adj_coherence_b = coherence_connectivity(data_ref_60, fs, param[band]['wp'])
+    adj_coherence_b = coherence_connectivity(data_ref_60, fs, param["beta"]['wp'])
     print("Coherence Gamma - Low")
-    band = "gammaLow"
-    adj_coherence_gl = coherence_connectivity(data_ref_60, fs, param[band]['wp'])
+    adj_coherence_gl = coherence_connectivity(data_ref_60, fs, param["gammaLow"]['wp'])
     print("Coherence Gamma - Mid")
-    band = "gammaMid"
-    adj_coherence_gm = coherence_connectivity(data_ref_60, fs, param[band]['wp'])
+    adj_coherence_gm = coherence_connectivity(data_ref_60, fs, param["gammaMid"]['wp'])
     print("Coherence Gamma - High")
-    band = "gammaHigh"
-    adj_coherence_gh = coherence_connectivity(data_ref_60, fs, param[band]['wp'])
+    adj_coherence_gh = coherence_connectivity(data_ref_60, fs, param["gammaHigh"]['wp'])
 
     return adj_coherence_bb, adj_coherence_d, adj_coherence_t, adj_coherence_a, adj_coherence_b, adj_coherence_gl, adj_coherence_gm, adj_coherence_gh
     
@@ -484,7 +476,7 @@ def pearson_connectivity(data, fs):
         t0 = time.time()
         adj[n1, n2] = pearsonr(data[:,n1], data[:,n2])[0]
         adj_pvalue[n1, n2] = pearsonr(data[:,n1], data[:,n2])[1]
-        t1 = time.time(); td = t1-t0; tr = td*(len(triu_ix)-count)/60; printProgressBar(count+1, len(triu_ix), prefix = '', suffix = f"{count}  {np.round(tr,2)} min", decimals = 1, length = 20, fill = "X", printEnd = "\r"); count = count+1
+        t1 = time.time(); td = t1-t0; tr = td*(len(triu_ix)-count)/60; printProgressBar(count+1, len(triu_ix), prefix = '', suffix = f"{count}  {np.round(tr,2)} min", decimals = 1, length = 20, fill = "X", printEnd = "\r"); count += 1
 
     adj += adj.T
     adj_pvalue += adj_pvalue.T
@@ -507,7 +499,7 @@ def spearman_connectivity(data, fs):
         t0 = time.time()
         adj[n1, n2] = spearmanr(data[:,n1], data[:,n2])[0]
         adj_pvalue[n1, n2] = spearmanr(data[:,n1], data[:,n2])[1]
-        t1 = time.time(); td = t1-t0; tr = td*(len(triu_ix)-count)/60; printProgressBar(count+1, len(triu_ix), prefix = '', suffix = f"{count}  {np.round(tr,2)} min", decimals = 1, length = 20, fill = "X", printEnd = "\r"); count = count+1
+        t1 = time.time(); td = t1-t0; tr = td*(len(triu_ix)-count)/60; printProgressBar(count+1, len(triu_ix), prefix = '', suffix = f"{count}  {np.round(tr,2)} min", decimals = 1, length = 20, fill = "X", printEnd = "\r"); count += 1
     adj += adj.T
     adj_pvalue += adj_pvalue.T
     return adj, adj_pvalue
@@ -574,7 +566,7 @@ def crossCorrelation_connectivity(data_hat, fs, tau, absolute=False):
                 adj[n1, n2] = xc[tau_ix].max()
             else:
                 adj[n1, n2] = xc[tau_ix].min()
-        t1 = time.time(); td = t1-t0; tr = td*(len(triu_ix)-count)/60; printProgressBar(count+1, len(triu_ix), prefix = '', suffix = f"{count}  {np.round(tr,2)} min", decimals = 1, length = 20, fill = "X", printEnd = "\r"); count = count+1
+        t1 = time.time(); td = t1-t0; tr = td*(len(triu_ix)-count)/60; printProgressBar(count+1, len(triu_ix), prefix = '', suffix = f"{count}  {np.round(tr,2)} min", decimals = 1, length = 20, fill = "X", printEnd = "\r"); count += 1
     adj += adj.T
 
     return adj
@@ -604,7 +596,7 @@ def mutualInformation_connectivity(data_hat, fs):
         
         #METHOD 3 - best
         adj[n1, n2] = mutual_info_regression( data_hat[:,n1].reshape(-1,1), data_hat[:,n2], n_neighbors=3  ) #Note: Very slow
-        t1 = time.time(); td = t1-t0; tr = td*(len(triu_ix)-count)/60; printProgressBar(count+1, len(triu_ix), prefix = '', suffix = f"{count}  {np.round(tr,2)} min", decimals = 1, length = 20, fill = "X", printEnd = "\r"); count = count+1
+        t1 = time.time(); td = t1-t0; tr = td*(len(triu_ix)-count)/60; printProgressBar(count+1, len(triu_ix), prefix = '', suffix = f"{count}  {np.round(tr,2)} min", decimals = 1, length = 20, fill = "X", printEnd = "\r"); count += 1
     adj += adj.T
     return adj
 
@@ -665,7 +657,7 @@ def coherence_connectivity(data_hat, fs, cf):
 
             # Store coherence in association matrix
             adj[n1, n2] = np.mean(out[1][cf_idx])
-        t1 = time.time(); td = t1-t0; tr = td*(len(triu_ix)-count)/60; printProgressBar(count+1, len(triu_ix), prefix = '', suffix = f"{count}  {np.round(tr,2)} min", decimals = 1, length = 20); count = count+1
+        t1 = time.time(); td = t1-t0; tr = td*(len(triu_ix)-count)/60; printProgressBar(count+1, len(triu_ix), prefix = '', suffix = f"{count}  {np.round(tr,2)} min", decimals = 1, length = 20); count += 1
 
     adj += adj.T
 
@@ -746,7 +738,7 @@ def multitaper(data, fs, time_band, n_taper, cf):
 
             # Store coherence in association matrix
             adj[n1, n2] = np.mean(out['cohe'][cf_idx])
-        t1 = time.time(); td = t1-t0; tr = td*(len(triu_ix)-count)/60; printProgressBar(count+1, len(triu_ix), prefix = '', suffix = f"{count}  {np.round(tr,2)} min", decimals = 1, length = 20, fill = "X", printEnd = "\r"); count = count+1
+        t1 = time.time(); td = t1-t0; tr = td*(len(triu_ix)-count)/60; printProgressBar(count+1, len(triu_ix), prefix = '', suffix = f"{count}  {np.round(tr,2)} min", decimals = 1, length = 20, fill = "X", printEnd = "\r"); count += 1
 
     adj += adj.T
 
