@@ -482,9 +482,9 @@ def pearson_connectivity(data, fs):
     count = 0
     for n1, n2 in zip(triu_ix, triu_iy):
         t0 = time.time()
-        adj[n1, n2] = pearsonr(  data[:,n1], data[:,n2])[0]
-        adj_pvalue[n1, n2] = pearsonr(  data[:,n1], data[:,n2])[1]
-        t1= time.time(); td = t1-t0; tr = td*(len(triu_ix)-count)/60; printProgressBar(count+1, len(triu_ix), prefix = '', suffix = f"{count}  {np.round(tr,2)} min", decimals = 1, length = 20, fill = "X", printEnd = "\r"); count = count+1
+        adj[n1, n2] = pearsonr(data[:,n1], data[:,n2])[0]
+        adj_pvalue[n1, n2] = pearsonr(data[:,n1], data[:,n2])[1]
+        t1 = time.time(); td = t1-t0; tr = td*(len(triu_ix)-count)/60; printProgressBar(count+1, len(triu_ix), prefix = '', suffix = f"{count}  {np.round(tr,2)} min", decimals = 1, length = 20, fill = "X", printEnd = "\r"); count = count+1
 
     adj += adj.T
     adj_pvalue += adj_pvalue.T
@@ -505,9 +505,9 @@ def spearman_connectivity(data, fs):
     count = 0
     for n1, n2 in zip(triu_ix, triu_iy):
         t0 = time.time()
-        adj[n1, n2] = spearmanr(  data[:,n1], data[:,n2])[0]
-        adj_pvalue[n1, n2] = spearmanr(  data[:,n1], data[:,n2])[1]
-        t1= time.time(); td = t1-t0; tr = td*(len(triu_ix)-count)/60; printProgressBar(count+1, len(triu_ix), prefix = '', suffix = f"{count}  {np.round(tr,2)} min", decimals = 1, length = 20, fill = "X", printEnd = "\r"); count = count+1
+        adj[n1, n2] = spearmanr(data[:,n1], data[:,n2])[0]
+        adj_pvalue[n1, n2] = spearmanr(data[:,n1], data[:,n2])[1]
+        t1 = time.time(); td = t1-t0; tr = td*(len(triu_ix)-count)/60; printProgressBar(count+1, len(triu_ix), prefix = '', suffix = f"{count}  {np.round(tr,2)} min", decimals = 1, length = 20, fill = "X", printEnd = "\r"); count = count+1
     adj += adj.T
     adj_pvalue += adj_pvalue.T
     return adj, adj_pvalue
@@ -574,7 +574,7 @@ def crossCorrelation_connectivity(data_hat, fs, tau, absolute=False):
                 adj[n1, n2] = xc[tau_ix].max()
             else:
                 adj[n1, n2] = xc[tau_ix].min()
-        t1= time.time(); td = t1-t0; tr = td*(len(triu_ix)-count)/60; printProgressBar(count+1, len(triu_ix), prefix = '', suffix = f"{count}  {np.round(tr,2)} min", decimals = 1, length = 20, fill = "X", printEnd = "\r"); count = count+1
+        t1 = time.time(); td = t1-t0; tr = td*(len(triu_ix)-count)/60; printProgressBar(count+1, len(triu_ix), prefix = '', suffix = f"{count}  {np.round(tr,2)} min", decimals = 1, length = 20, fill = "X", printEnd = "\r"); count = count+1
     adj += adj.T
 
     return adj
@@ -604,7 +604,7 @@ def mutualInformation_connectivity(data_hat, fs):
         
         #METHOD 3 - best
         adj[n1, n2] = mutual_info_regression( data_hat[:,n1].reshape(-1,1), data_hat[:,n2], n_neighbors=3  ) #Note: Very slow
-        t1= time.time(); td = t1-t0; tr = td*(len(triu_ix)-count)/60; printProgressBar(count+1, len(triu_ix), prefix = '', suffix = f"{count}  {np.round(tr,2)} min", decimals = 1, length = 20, fill = "X", printEnd = "\r"); count = count+1
+        t1 = time.time(); td = t1-t0; tr = td*(len(triu_ix)-count)/60; printProgressBar(count+1, len(triu_ix), prefix = '', suffix = f"{count}  {np.round(tr,2)} min", decimals = 1, length = 20, fill = "X", printEnd = "\r"); count = count+1
     adj += adj.T
     return adj
 
@@ -665,7 +665,7 @@ def coherence_connectivity(data_hat, fs, cf):
 
             # Store coherence in association matrix
             adj[n1, n2] = np.mean(out[1][cf_idx])
-        t1= time.time(); td = t1-t0; tr = td*(len(triu_ix)-count)/60; printProgressBar(count+1, len(triu_ix), prefix = '', suffix = f"{count}  {np.round(tr,2)} min", decimals = 1, length = 20); count = count+1
+        t1 = time.time(); td = t1-t0; tr = td*(len(triu_ix)-count)/60; printProgressBar(count+1, len(triu_ix), prefix = '', suffix = f"{count}  {np.round(tr,2)} min", decimals = 1, length = 20); count = count+1
 
     adj += adj.T
 
@@ -746,7 +746,7 @@ def multitaper(data, fs, time_band, n_taper, cf):
 
             # Store coherence in association matrix
             adj[n1, n2] = np.mean(out['cohe'][cf_idx])
-        t1= time.time(); td = t1-t0; tr = td*(len(triu_ix)-count)/60; printProgressBar(count+1, len(triu_ix), prefix = '', suffix = f"{count}  {np.round(tr,2)} min", decimals = 1, length = 20, fill = "X", printEnd = "\r"); count = count+1
+        t1 = time.time(); td = t1-t0; tr = td*(len(triu_ix)-count)/60; printProgressBar(count+1, len(triu_ix), prefix = '', suffix = f"{count}  {np.round(tr,2)} min", decimals = 1, length = 20, fill = "X", printEnd = "\r"); count = count+1
 
     adj += adj.T
 
@@ -888,36 +888,36 @@ def elliptic_bandFilter(data, fs, param):
     
     data_60 = elliptic(data, fs, **param['Notch_60Hz']) 
     band = "Broadband"
-    data_bb = elliptic(data_60, fs,  [param[band]['wp'][1]], [param[band]['ws'][1]], gpass,  gstop)
-    data_bb = elliptic(data_bb, fs,  [param[band]['wp'][0]], [param[band]['ws'][0]], gpass,  gstop)
+    data_bb = elliptic(data_60, fs, [param[band]['wp'][1]], [param[band]['ws'][1]], gpass,  gstop)
+    data_bb = elliptic(data_bb, fs, [param[band]['wp'][0]], [param[band]['ws'][0]], gpass,  gstop)
 
     band = "delta"
-    data_d = elliptic(data_60, fs,  [param[band]['wp'][1]], [param[band]['ws'][1]], gpass,  gstop)
-    data_d = elliptic(data_d, fs,  [param[band]['wp'][0]], [param[band]['ws'][0]], gpass,  gstop)
+    data_d = elliptic(data_60, fs, [param[band]['wp'][1]], [param[band]['ws'][1]], gpass,  gstop)
+    data_d = elliptic(data_d, fs, [param[band]['wp'][0]], [param[band]['ws'][0]], gpass,  gstop)
     
     band = "theta"
-    data_t = elliptic(data_60, fs,  [param[band]['wp'][1]], [param[band]['ws'][1]], gpass,  gstop)
-    data_t = elliptic(data_t, fs,  [param[band]['wp'][0]], [param[band]['ws'][0]], gpass,  gstop)
+    data_t = elliptic(data_60, fs, [param[band]['wp'][1]], [param[band]['ws'][1]], gpass,  gstop)
+    data_t = elliptic(data_t, fs, [param[band]['wp'][0]], [param[band]['ws'][0]], gpass,  gstop)
     
     band = "alpha"
-    data_a = elliptic(data_60, fs,  [param[band]['wp'][1]], [param[band]['ws'][1]], gpass,  gstop)
-    data_a = elliptic(data_a, fs,  [param[band]['wp'][0]], [param[band]['ws'][0]], gpass,  gstop)
+    data_a = elliptic(data_60, fs, [param[band]['wp'][1]], [param[band]['ws'][1]], gpass,  gstop)
+    data_a = elliptic(data_a, fs, [param[band]['wp'][0]], [param[band]['ws'][0]], gpass,  gstop)
 
     band = "beta"
-    data_b = elliptic(data_60, fs,  [param[band]['wp'][1]], [param[band]['ws'][1]], gpass,  gstop)
-    data_b = elliptic(data_b, fs,  [param[band]['wp'][0]], [param[band]['ws'][0]], gpass,  gstop)
+    data_b = elliptic(data_60, fs, [param[band]['wp'][1]], [param[band]['ws'][1]], gpass,  gstop)
+    data_b = elliptic(data_b, fs, [param[band]['wp'][0]], [param[band]['ws'][0]], gpass,  gstop)
     
     band = "gammaLow"
-    data_gl = elliptic(data_60, fs,  [param[band]['wp'][1]], [param[band]['ws'][1]], gpass,  gstop)
-    data_gl = elliptic(data_gl, fs,  [param[band]['wp'][0]], [param[band]['ws'][0]], gpass,  gstop)
+    data_gl = elliptic(data_60, fs, [param[band]['wp'][1]], [param[band]['ws'][1]], gpass,  gstop)
+    data_gl = elliptic(data_gl, fs, [param[band]['wp'][0]], [param[band]['ws'][0]], gpass,  gstop)
     
     band = "gammaMid"
-    data_gm = elliptic(data_60, fs,  [param[band]['wp'][1]], [param[band]['ws'][1]], gpass,  gstop)
-    data_gm = elliptic(data_gm, fs,  [param[band]['wp'][0]], [param[band]['ws'][0]], gpass,  gstop)
+    data_gm = elliptic(data_60, fs, [param[band]['wp'][1]], [param[band]['ws'][1]], gpass,  gstop)
+    data_gm = elliptic(data_gm, fs, [param[band]['wp'][0]], [param[band]['ws'][0]], gpass,  gstop)
 
     band = "gammaHigh"
-    data_gh = elliptic(data_60, fs,  [param[band]['wp'][1]], [param[band]['ws'][1]], gpass,  gstop)
-    data_gh = elliptic(data_gh, fs,  [param[band]['wp'][0]], [param[band]['ws'][0]], gpass,  gstop)
+    data_gh = elliptic(data_60, fs, [param[band]['wp'][1]], [param[band]['ws'][1]], gpass,  gstop)
+    data_gh = elliptic(data_gh, fs, [param[band]['wp'][0]], [param[band]['ws'][0]], gpass,  gstop)
 
     return data_bb, data_d, data_t, data_a, data_b, data_gl, data_gm, data_gh
 
