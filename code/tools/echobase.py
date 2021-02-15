@@ -187,7 +187,7 @@ def crossCorrelation_wrapper(data, fs, param = param, avgref=True):
         fs: int
             Sampling frequency
 
-        reref: True/False
+        avgref: True/False
             Re-reference data to the common average (default: True)
 
     Returns
@@ -240,7 +240,7 @@ def pearson_wrapper(data, fs, param = param, avgref=True):
         fs: int
             Sampling frequency
 
-        reref: True/False
+        avgref: True/False
             Re-reference data to the common average (default: True)
 
     Returns
@@ -294,7 +294,7 @@ def spearman_wrapper(data, fs, param = param, avgref=True):
         fs: int
             Sampling frequency
 
-        reref: True/False
+        avgref: True/False
             Re-reference data to the common average (default: True)
 
     Returns
@@ -357,7 +357,7 @@ def coherence_wrapper(data, fs, param = param, avgref=True):
         fs: int
             Sampling frequency
 
-        reref: True/False
+        avgref: True/False
             Re-reference data to the common average (default: True)
 
     Returns
@@ -435,7 +435,7 @@ def mutualInformation_wrapper(data, fs, param = param, avgref=True):
         fs: int
             Sampling frequency
 
-        reref: True/False
+        avgref: True/False
             Re-reference data to the common average (default: True)
 
     Returns
@@ -650,13 +650,6 @@ def coherence_connectivity(data_hat, fs, cf):
 
         fs: int
             Sampling frequency
-
-        time_band: float
-            The time half bandwidth resolution of the estimate [-NW, NW];
-            such that resolution is 2*NW
-
-        n_taper: int
-            Number of Slepian sequences to use (Usually < 2*NW-1)
 
         cf: list
             Frequency range over which to compute coherence [-NW+C, C+NW]
