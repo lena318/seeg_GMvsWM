@@ -14,14 +14,31 @@ Logic of code:
 
 Table of Contents:
 A. Main
-    1. broadband_conn
-    2. multiband_conn
+    1. broadband_conn ???
+    2. multiband_conn ???
+    
+    included:
+    1. crossCorrelation_wrapper
+    2. pearson_wrapper
+    3. spearman_wrapper
+    4. coherence_wrapper
+    5. mutualInformation_wrapper
+    6. pearson_connectivity
+    7. spearman_connectivity
+    8. crossCorrelation_connectivity
+    9. mutualInformation_connectivity
+    10. coherence_connectivity
+    
 B. Supporting Code:
     3. common_avg_ref
     4. ar_one
     5. elliptic
-    6. xcorr_mag
-    7. xcorr
+    
+    6. (elliptic_bandFilter ???)
+    7. (butterworth_filt ???)
+    6. xcorr_mag (not included
+    7. xcorr (not included)
+    
 C. Utilities
     8. check_path
     9. make_path
@@ -30,6 +47,12 @@ C. Utilities
     12. check_dims
     13. check_type
     14. check_function
+    
+    Extra: 
+    15. printProgressBar
+    16. show_eeg_compare
+    17. plot_adj
+    18. plot_adj_allbands
 
 See individual function comments for inputs and outputs
 
@@ -193,7 +216,28 @@ def crossCorrelation_wrapper(data, fs, param = param, avgref=True):
 
     Returns
     -------
-        adj: ndarray, shape (N, N)
+        adj_xcorr_bb: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_xcorr_d: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_xcorr_t: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_xcorr_a: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_xcorr_b: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_xcorr_gl: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_xcorr_gm: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_xcorr_gh: ndarray, shape (N, N)
             Adjacency matrix for N variates
     """
 
@@ -246,7 +290,53 @@ def pearson_wrapper(data, fs, param = param, avgref=True):
 
     Returns
     -------
-        adj: ndarray, shape (N, N)
+        adj_pearson_bb: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_pearson_d: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_pearson_t: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_pearson_a: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_pearson_b: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_pearson_gl: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_pearson_gm: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_pearson_gh: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+            
+        adj_pearson_bb_pvalue: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_pearson_d_pval: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_pearson_t_pval: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_pearson_a_pval: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_pearson_b_pval: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_pearson_gl_pval: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_pearson_gm_pval: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_pearson_gh_pval: ndarray, shape (N, N)
             Adjacency matrix for N variates
     """
 
@@ -299,7 +389,53 @@ def spearman_wrapper(data, fs, param = param, avgref=True):
 
     Returns
     -------
-        adj: ndarray, shape [(N, N), (N, N)]
+        adj_spearman_bb: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_spearman_d: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_spearman_t: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_spearman_a: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_spearman_b: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_spearman_gl: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_spearman_gm: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_spearman_gh: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+            
+        adj_spearman_bb_pvalue: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_spearman_d_pval: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_spearman_t_pval: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_spearman_a_pval: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_spearman_b_pval: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_spearman_gl_pval: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_spearman_gm_pval: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_spearman_gh_pval: ndarray, shape (N, N)
             Adjacency matrix for N variates
     """
 
@@ -360,7 +496,28 @@ def coherence_wrapper(data, fs, param = param, avgref=True):
 
     Returns
     -------
-        adj: ndarray, shape (N, N)
+        adj_coherence_bb: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_coherence_d: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_coherence_t: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_coherence_a: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_coherence_b: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_coherence_gl: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_coherence_gm: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_coherence_gh: ndarray, shape (N, N)
             Adjacency matrix for N variates
     """
 
@@ -419,7 +576,28 @@ def mutualInformation_wrapper(data, fs, param = param, avgref=True):
 
     Returns
     -------
-        adj: ndarray, shape (N, N)
+       adj_mi_bb: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_mi_d: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_mi_t: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_mi_a: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_mi_b: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_mi_gl: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_mie_gm: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_mi_gh: ndarray, shape (N, N)
             Adjacency matrix for N variates
     """
 
@@ -461,6 +639,23 @@ def mutualInformation_wrapper(data, fs, param = param, avgref=True):
 
    
 def pearson_connectivity(data, fs):
+    """
+    Parameters
+    ----------
+        data: ndarray, shape (T, N)
+            Input signal with T samples over N variates
+
+        fs: int
+            Sampling frequency
+
+    Returns
+    -------
+        adj: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+            
+        adj_pvalue: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+    """
 
     # Retrieve data attributes
     n_samp, n_chan = data.shape
@@ -484,6 +679,23 @@ def pearson_connectivity(data, fs):
 
 
 def spearman_connectivity(data, fs):
+     """
+    Parameters
+    ----------
+        data: ndarray, shape (T, N)
+            Input signal with T samples over N variates
+
+        fs: int
+            Sampling frequency
+
+    Returns
+    -------
+        adj: ndarray, shape (N, N), (N, N)
+            Adjacency matrix for N variates
+            
+        adj_pvalue: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+    """
     
     # Retrieve data attributes
     n_samp, n_chan = data.shape
@@ -573,9 +785,24 @@ def crossCorrelation_connectivity(data_hat, fs, tau, absolute=False):
 
    
 def mutualInformation_connectivity(data_hat, fs):
-    #https://www.roelpeters.be/calculating-mutual-information-in-python/
-    #https://scikit-learn.org/stable/modules/generated/sklearn.feature_selection.mutual_info_regression.html#id6
-    
+    """
+    https://www.roelpeters.be/calculating-mutual-information-in-python/
+    https://scikit-learn.org/stable/modules/generated/sklearn.feature_selection.mutual_info_regression.html#id6
+   
+    Parameters
+    ----------
+        data_hat: ndarray, shape (T, N)
+            Input signal with T samples over N variates
+
+        fs: int
+            Sampling frequency
+
+    Returns
+    -------
+        adj: ndarray, shape (N, N)
+            Adjacency matrix for N variates
+    """
+   
     # Retrieve data_hat attributes
     n_samp, n_chan = data_hat.shape
     triu_ix, triu_iy = np.triu_indices(n_chan, k=1)
@@ -877,6 +1104,41 @@ def elliptic(data_hat, fs, wp, ws, gpass, gstop):
 
 
 def elliptic_bandFilter(data, fs, param):
+    """
+    Parameters
+    ----------
+        data: ndarray, shape (T, N)
+            Input signal with T samples over N variates
+
+        fs: int
+            Sampling frequency
+
+    Returns
+    -------
+        data_bb: ndarray, shape (T, N)
+            Filtered signal with T samples over N variates
+            
+        data_d: ndarray, shape (T, N)
+            Filtered signal with T samples over N variates
+            
+        data_t: ndarray, shape (T, N)
+            Filtered signal with T samples over N variates
+        
+        data_a: ndarray, shape (T, N)
+            Filtered signal with T samples over N variates
+            
+        data_b: ndarray, shape (T, N)
+            Filtered signal with T samples over N variates
+            
+        data_gl: ndarray, shape (T, N)
+            Filtered signal with T samples over N variates
+        
+        data_gm: ndarray, shape (T, N)
+            Filtered signal with T samples over N variates
+            
+        data_gh: ndarray, shape (T, N)
+            Filtered signal with T samples over N variates
+    """
     
     data_60 = elliptic(data, fs, **param['Notch_60Hz']) 
     band = "Broadband"
@@ -915,6 +1177,21 @@ def elliptic_bandFilter(data, fs, param):
 
 
 def butterworth_filt(data, fs):
+    """
+    Parameters
+    ----------
+        data: ndarray, shape (T, N)
+            Input signal with T samples over N variates
+
+        fs: int
+            Sampling frequency
+
+    Returns
+    -------
+       notched: ndarray, shape (T, N)
+            Filtered signal with T samples over N variates
+    """
+    
     filtered = np.zeros(data.shape)
     w = np.array([1, 120])  / np.array([(fs / 2), (fs / 2)])  # Normalize the frequency
     b, a = signal.butter(4, w, 'bandpass')
