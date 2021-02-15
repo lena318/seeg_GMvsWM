@@ -167,6 +167,7 @@ plot_adj_allbands(adj_mi_all, vmin = 0, vmax = 1 )
 """
 
 
+
 #%%
 #Wrapper scripts
 def crossCorrelation_wrapper(data, fs, param = param, avgref=True):
@@ -282,7 +283,6 @@ def pearson_wrapper(data, fs, param = param, avgref=True):
 
     return [adj_pearson_bb, adj_pearson_d, adj_pearson_t, adj_pearson_a, adj_pearson_b, adj_pearson_gl, adj_pearson_gm, adj_pearson_gh], [adj_pearson_bb_pval, adj_pearson_d_pval, adj_pearson_t_pval, adj_pearson_a_pval, adj_pearson_b_pval, adj_pearson_gl_pval, adj_pearson_gm_pval, adj_pearson_gh_pval]
 
-
       
 def spearman_wrapper(data, fs, param = param, avgref=True):
     """
@@ -299,7 +299,7 @@ def spearman_wrapper(data, fs, param = param, avgref=True):
 
     Returns
     -------
-        adj: ndarray, shape (N, N)
+        adj: ndarray, shape [(N, N), (N, N)]
             Adjacency matrix for N variates
     """
 
@@ -334,12 +334,10 @@ def spearman_wrapper(data, fs, param = param, avgref=True):
     print("spearman Correlation Gamma - High")
     adj_spearman_gh, adj_spearman_gh_pval = spearman_connectivity(data_gh, fs)
 
-    return [adj_spearman_bb, adj_spearman_d, adj_spearman_t, adj_spearman_a, adj_spearman_b, adj_spearman_gl, adj_spearman_gm, adj_spearman_gh], [adj_spearman_bb_pval, adj_spearman_d_pval, adj_spearman_t_pval, adj_spearman_a_pval, adj_spearman_b_pval, adj_spearman_gl_pval, adj_spearman_gm_pval, adj_spearman_gh_pval]
-      
+    return [adj_spearman_bb, adj_spearman_d, adj_spearman_t, adj_spearman_a, adj_spearman_b, adj_spearman_gl, adj_spearman_gm, adj_spearman_gh], [adj_spearman_bb_pval, adj_spearman_d_pval, adj_spearman_t_pval, adj_spearman_a_pval, adj_spearman_b_pval, adj_spearman_gl_pval, adj_spearman_gm_pval, adj_spearman_gh_pval]  
     
  
 def coherence_wrapper(data, fs, param = param, avgref=True):
-    
     """
     Pipeline function for computing a band-specific functional network from ECoG.
 
@@ -362,17 +360,8 @@ def coherence_wrapper(data, fs, param = param, avgref=True):
 
     Returns
     -------
-        adj_alphatheta: ndarray, shape (N, N)
-            Adjacency matrix for N variates (Alpha/Theta Band 5-15 Hz)
-
-        adj_beta: ndarray, shape (N, N)
-            Adjacency matrix for N variates (Beta Band 15-25 Hz)
-
-        adj_lowgamma: ndarray, shape (N, N)
-            Adjacency matrix for N variates (Low Gamma Band 30-40 Hz)
-
-        adj_highgamma: ndarray, shape (N, N)
-            Adjacency matrix for N variates (High Gamma Band 95-105 Hz)
+        adj: ndarray, shape (N, N)
+            Adjacency matrix for N variates
     """
 
     # Standard param checks
@@ -413,8 +402,6 @@ def coherence_wrapper(data, fs, param = param, avgref=True):
     adj_coherence_gh = coherence_connectivity(data_ref_60, fs, param[band]['wp'])
 
     return adj_coherence_bb, adj_coherence_d, adj_coherence_t, adj_coherence_a, adj_coherence_b, adj_coherence_gl, adj_coherence_gm, adj_coherence_gh
-    
-    
     
     
 def mutualInformation_wrapper(data, fs, param = param, avgref=True):
@@ -478,19 +465,9 @@ def mutualInformation_wrapper(data, fs, param = param, avgref=True):
     return adj_mi_bb, adj_mi_d, adj_mi_t, adj_mi_a, adj_mi_b, adj_mi_gl, adj_mi_gm, adj_mi_gh
           
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
 #%%
-    
-    
-    
+
+   
 def pearson_connectivity(data, fs):
 
     # Retrieve data attributes
@@ -515,6 +492,7 @@ def pearson_connectivity(data, fs):
     adj_pvalue += adj_pvalue.T
     return adj, adj_pvalue
 
+
 def spearman_connectivity(data, fs):
     
     # Retrieve data attributes
@@ -537,6 +515,7 @@ def spearman_connectivity(data, fs):
     adj += adj.T
     adj_pvalue += adj_pvalue.T
     return adj, adj_pvalue
+
 
 def crossCorrelation_connectivity(data_hat, fs, tau, absolute=False):
     """
@@ -605,12 +584,9 @@ def crossCorrelation_connectivity(data_hat, fs, tau, absolute=False):
     return adj
 
    
-
-
 def mutualInformation_connectivity(data_hat, fs):
     #https://www.roelpeters.be/calculating-mutual-information-in-python/
     #https://scikit-learn.org/stable/modules/generated/sklearn.feature_selection.mutual_info_regression.html#id6
-    
     
     # Retrieve data_hat attributes
     n_samp, n_chan = data_hat.shape
@@ -637,6 +613,7 @@ def mutualInformation_connectivity(data_hat, fs):
         t1= time.time(); td = t1-t0; tr = td*(len(triu_ix)-count)/60; printProgressBar(count+1, len(triu_ix), prefix = '', suffix = f"{count}  {np.round(tr,2)} min", decimals = 1, length = 20, fill = "X", printEnd = "\r"); count = count+1
     adj += adj.T
     return adj
+
 
 def coherence_connectivity(data_hat, fs, cf):
     """
@@ -701,12 +678,7 @@ def coherence_connectivity(data_hat, fs, cf):
     return adj    
     
 
-
-
-   
-
 """
-
 def multitaper(data, fs, time_band, n_taper, cf):
     
     The multitaper function windows the signal using multiple Slepian taper
@@ -784,13 +756,15 @@ def multitaper(data, fs, time_band, n_taper, cf):
 
     adj += adj.T
 
-    return adj
+    return adj    
 """
+
+
+
 #%%
 """
 B. Referencing and Filters
 """
-
 
 def common_avg_ref(data):
     """
@@ -969,7 +943,6 @@ def butterworth_filt(data, fs):
 
 
 
-
 #%%
 """
 C. Utilities:
@@ -1112,6 +1085,7 @@ def plot_adj(adj, vmin = -1, vmax = 1 ):
     fig,axes = plt.subplots(1,1,figsize=(4,4), dpi = 300)
     sns.heatmap(adj, square=True, ax = axes, vmin = vmin, vmax = vmax)
 
+    
 def plot_adj_allbands(adj_list, vmin = -1, vmax = 1, titles = ["Broadband", "Delta", "Theta", "Alpha", "Beta", "Gamma - Low", "Gamma - Mid", "Gamma - High"] ):
     fig,axes = plt.subplots(2,4,figsize=(16,9), dpi = 300)
     count = 0
@@ -1121,6 +1095,7 @@ def plot_adj_allbands(adj_list, vmin = -1, vmax = 1, titles = ["Broadband", "Del
             axes[x][y].set_title(titles[count], size=10)
             count = count+1
 
+            
 
 #%%
 #visulaize
@@ -1205,10 +1180,6 @@ print(f"Spearman: {np.round( spearmanr(d1, d2)[0],2 )}; p-value: {np.round( spea
 
 fig,axes = plt.subplots(1,1,figsize=(8,4), dpi = 300)
 sns.regplot(  x = data_butter[range(fs*st, fs*sp),  n1], y= data_butter[range(fs*st, fs*sp),n2], ax = axes , scatter_kws={"s":0.1})
-
-
-
-
 
 
 elecLoc["Tissue_segmentation_distance_from_label_2"]   
