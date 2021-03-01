@@ -6,17 +6,10 @@ Purpose:
 Function pipelines for filtering time-varying data
 
 Logic of code:
-    1. Default parameters
+    1. Default parameters for filtering 
     2. Calculating connectivity for cross-correlation, pearson, spearman, coherence, and mutal inforomation for 
        broadband, delta, theta, alpha, beta, gamma-high, gamma-mid, and gamma-low frequency bands
-    3. Supporting code???
-    
-    Before:
-    1. Common average reference (common_avg_ref)
-    2. Fit an AR(1) model to the data and retains the residual as the pre-whitened data (ar_one)
-    3. bandpass, lowpass, highpass filtering (Notch at 60Hz, HPF at 5Hz, LPF at 115Hz, XCorr at 0.25) (elliptic)
-    4. Calculate cross-correlation similarity function for functional connectivity (xcorr_mag)
-    5. Calculate a band-specific functional network, coherence. (multitaper)
+    3. Supporting code to enact filtering, type checking, etc.
 
 Table of Contents:
 
@@ -114,7 +107,7 @@ Need homebrew, then do:
 """
 A. Set up
 """
-# Parameter set - the following are the default parameters
+# Parameter set - the following are the default parameters for filtering 
 
 #Bands
 param_band = {}
@@ -1176,6 +1169,9 @@ def elliptic(data_hat, fs, wp, ws, gpass, gstop):
 
 def elliptic_bandFilter(data, fs, param):
     """
+    This function serves as a wrapper for the elliptic filter, in order to filter data into frequency bands 
+    by first filtering out 60Hz and then filtering data for each frequency band. 
+    
     Parameters
     ----------
         data: ndarray, shape (T, N)
@@ -1251,6 +1247,8 @@ def elliptic_bandFilter(data, fs, param):
 
 def butterworth_filt(data, fs):
     """
+    This function filters data with butterworth filter.
+    
     Parameters
     ----------
         data: ndarray, shape (T, N)
@@ -1308,7 +1306,7 @@ def getNextCol(datacols, currcol):
         if(datacols[k] == nextcol):
             return k
 
-        
+
 def getIndexes(dfObj, value):
     """
     This getIndexes function is a helper function for the Laplacian montaging. It makes sure the CSV
@@ -1316,13 +1314,13 @@ def getIndexes(dfObj, value):
  
     Parameters
     ----------
-        dfObj: 
+        dfObj: ndarray of columns 
 
-        value: 
+        value: index in dfObj
 
     Returns
     -------
-        listOfPos: 
+        listOfPos: list of positive indices 
     """
     listOfPos = list()
     result = dfObj.isin([value])
