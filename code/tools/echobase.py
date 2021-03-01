@@ -7,8 +7,8 @@ Function pipelines for filtering time-varying data
 
 Logic of code:
     1. Default parameters
-    2. Calculating cross-correlation, pearson, spearman, coherence, and mutal inforomation connectivity for 
-       broadband, delta, theta, alpha, beta, gamma-high, gamma-mid, and gamma-low frequencies 
+    2. Calculating connectivity for cross-correlation, pearson, spearman, coherence, and mutal inforomation for 
+       broadband, delta, theta, alpha, beta, gamma-high, gamma-mid, and gamma-low frequency bands
     3. Supporting code???
     
     Before:
@@ -1436,6 +1436,7 @@ def check_function(obj):
     if not inspect.isfunction(obj):
         raise TypeError('%r must be a function.' % (obj))
 
+        
 # Progress bar function
 def printProgressBar(iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = "X", printEnd = "\r"):
     """
@@ -1460,6 +1461,27 @@ def printProgressBar(iteration, total, prefix = '', suffix = '', decimals = 1, l
         
         
 def show_eeg_compare(data, data_hat, fs, channel = 0, start_sec = 0, stop_sec = 2):
+    """
+    Plots eeg for comparison 
+    @params:
+        data: ndarray, shape (T, N)
+            Input signal with T samples over N variates
+            
+        data_hat: ndarray, shape (T, N)
+            Input signal with T samples over N variates
+        
+        fs: int
+            Sampling frequency
+        
+        channel: int
+            (default = 0)
+        
+        start_sec: int
+            Starting time (default = 0)
+        
+        stop_sec: int
+            Stopping time (default = 2)
+    """
     data_ch = data[:,channel]
     data_ch_hat = data_hat[:,channel]    
     fig,axes = plt.subplots(1,2,figsize=(8,4), dpi = 300)
@@ -1469,11 +1491,38 @@ def show_eeg_compare(data, data_hat, fs, channel = 0, start_sec = 0, stop_sec = 
 
 
 def plot_adj(adj, vmin = -1, vmax = 1 ):
+    """
+    Plots adjacency matrix 
+    @params:
+        adj: ndarray, shape (N, N)
+             Adjacency matrix for N variates
+        
+        vmin: int
+            (default = -1)
+        
+        vmax: int
+            (default = 1)
+    """    
     fig,axes = plt.subplots(1,1,figsize=(4,4), dpi = 300)
     sns.heatmap(adj, square=True, ax = axes, vmin = vmin, vmax = vmax)
 
     
 def plot_adj_allbands(adj_list, vmin = -1, vmax = 1, titles = ["Broadband", "Delta", "Theta", "Alpha", "Beta", "Gamma - Low", "Gamma - Mid", "Gamma - High"] ):
+    """
+    Plots adjacency matrix for all bands
+    @params:
+        adj: ndarray, shape (F, N, N)
+             Adjacency matrix for N variates for F frequency bands 
+        
+        vmin: int
+            (default = -1)
+        
+        vmax: int
+            (default = 1)
+        
+        titles: frequency band names
+            (default = "Broadband", "Delta", "Theta", "Alpha", "Beta", "Gamma - Low", "Gamma - Mid", "Gamma - High")
+    """ 
     fig,axes = plt.subplots(2,4,figsize=(16,9), dpi = 300)
     count = 0
     for x in range(2):
@@ -1481,7 +1530,6 @@ def plot_adj_allbands(adj_list, vmin = -1, vmax = 1, titles = ["Broadband", "Del
             sns.heatmap(adj_list[count], square=True, ax = axes[x][y], vmin = vmin, vmax = vmax)
             axes[x][y].set_title(titles[count], size=10)
             count = count+1
-
             
 
 #%%
