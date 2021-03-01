@@ -1183,32 +1183,34 @@ def elliptic_bandFilter(data, fs, param):
 
         fs: int
             Sampling frequency
+            
+        param: set to default
 
     Returns
     -------
         data_bb: ndarray, shape (T, N)
-            Filtered signal with T samples over N variates
+            Filtered signal with T samples over N variates for broadband 
             
         data_d: ndarray, shape (T, N)
-            Filtered signal with T samples over N variates
+            Filtered signal with T samples over N variates for delta
             
         data_t: ndarray, shape (T, N)
-            Filtered signal with T samples over N variates
+            Filtered signal with T samples over N variates for theta
         
         data_a: ndarray, shape (T, N)
-            Filtered signal with T samples over N variates
+            Filtered signal with T samples over N variates for alpha
             
         data_b: ndarray, shape (T, N)
-            Filtered signal with T samples over N variates
+            Filtered signal with T samples over N variates for beta
             
         data_gl: ndarray, shape (T, N)
-            Filtered signal with T samples over N variates
+            Filtered signal with T samples over N variates for gamma-low
         
         data_gm: ndarray, shape (T, N)
-            Filtered signal with T samples over N variates
+            Filtered signal with T samples over N variates for gamma-mid
             
         data_gh: ndarray, shape (T, N)
-            Filtered signal with T samples over N variates
+            Filtered signal with T samples over N variates for gamma-high
     """
     
     data_60 = elliptic(data, fs, **param['Notch_60Hz']) 
@@ -1284,13 +1286,20 @@ C. Utilities:
 
 def getNextCol(datacols, currcol):
     """
-     This getNextCol function is a helper function for the automatic bipolar montaging. It sorts the column list
-     alphabetically, and returns the appropriate "next" column for bipolar montaging
+    This getNextCol function is a helper function for the automatic bipolar montaging. It sorts the column list
+    alphabetically, and returns the appropriate "next" column for bipolar montaging
+     
+    Parameters
+    ----------
+        datacols: list of columns of the original data
 
-     :param datacols: the list of columns of the original data
-     :param currcol: the current column of interest
-     :return: the index of the next column
-     """
+        currcol: current column of interest
+
+    Returns
+    -------
+        k: the index of the next column
+    """
+    
      collist = sorted(list(datacols))
      for j in range(0,len(collist)-1):
         if(collist[j] == currcol):
@@ -1299,24 +1308,32 @@ def getNextCol(datacols, currcol):
         if(datacols[k] == nextcol):
             return k
 
+        
 def getIndexes(dfObj, value):
- """
- This getIndexes function is a helper function for the Laplacian montaging. It makes sure the CSV
- electrode files have the same electrodes as the voltage data
+    """
+    This getIndexes function is a helper function for the Laplacian montaging. It makes sure the CSV
+    electrode files have the same electrodes as the voltage data
  
- :param dfObj:
- :param value:
- :return:
- """
- listOfPos = list()
- result = dfObj.isin([value])
- seriesObj = result.any()
- columnNames = list(seriesObj[seriesObj == True].index)
- for col in columnNames:
-    rows = list(result[col][result[col] == True].index)
-    for row in rows:
-        listOfPos.append((row, col))
- return listOfPos
+    Parameters
+    ----------
+        dfObj: 
+
+        value: 
+
+    Returns
+    -------
+        listOfPos: 
+    """
+    listOfPos = list()
+    result = dfObj.isin([value])
+    seriesObj = result.any()
+    columnNames = list(seriesObj[seriesObj == True].index)
+    for col in columnNames:
+        rows = list(result[col][result[col] == True].index)
+        for row in rows:
+            listOfPos.append((row, col))
+    return listOfPos
+
 
 def check_path(path):
     '''
